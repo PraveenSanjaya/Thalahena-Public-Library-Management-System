@@ -16,10 +16,12 @@ const MemberManagement = () => {
     email: '',
     password: '',
     birthDate: '',
+    membershipDate: '',
     gender: '',
     phone: '',
     whatsapp: '',
-    socialMedia: ''
+    socialMedia: '',
+    active: true
   });
 
   useEffect(() => {
@@ -72,10 +74,12 @@ const MemberManagement = () => {
         email: member.email || '',
         password: '',
         birthDate: member.birthDate || '',
+        membershipDate: member.membershipDate || '',
         gender: member.gender || '',
         phone: member.phone || '',
         whatsapp: member.whatsapp || '',
-        socialMedia: member.socialMedia || ''
+        socialMedia: member.socialMedia || '',
+        active: member.isActive !== undefined ? member.isActive : true
       });
     } else {
       setEditingMember(null);
@@ -86,10 +90,12 @@ const MemberManagement = () => {
         email: '',
         password: '',
         birthDate: '',
+        membershipDate: new Date().toISOString().split('T')[0],
         gender: '',
         phone: '',
         whatsapp: '',
-        socialMedia: ''
+        socialMedia: '',
+        active: true
       });
     }
     setShowModal(true);
@@ -98,10 +104,18 @@ const MemberManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Transform formData to match backend User entity structure
+      const memberData = {
+        ...formData,
+        active: formData.active
+      };
+      
+      console.log('Sending member data:', memberData);
+      
       if (editingMember) {
-        await api.put(`/admin/members/${editingMember.id}`, formData);
+        await api.put(`/admin/members/${editingMember.id}`, memberData);
       } else {
-        await api.post('/admin/members', formData);
+        await api.post('/admin/members', memberData);
       }
       setShowModal(false);
       fetchMembers();
@@ -119,6 +133,16 @@ const MemberManagement = () => {
     } catch (error) {
       console.error('Error deleting member:', error);
       alert('Error deleting member');
+    }
+  };
+
+  const handleToggleStatus = async (id) => {
+    try {
+      await api.put(`/admin/members/${id}/status`);
+      fetchMembers();
+    } catch (error) {
+      console.error('Error toggling member status:', error);
+      alert('Error updating member status');
     }
   };
 
@@ -183,6 +207,10 @@ const MemberManagement = () => {
                 <th style={tableHeaderStyle}>Gender</th>
                 <th style={tableHeaderStyle}>Email</th>
                 <th style={tableHeaderStyle}>WhatsApp</th>
+                <th style={tableHeaderStyle}>Phone</th>
+                <th style={tableHeaderStyle}>Social Media</th>
+                <th style={tableHeaderStyle}>Status</th>
+                <th style={tableHeaderStyle}>Membership Date</th>
                 <th style={tableHeaderStyle}>Actions</th>
               </tr>
             </thead>
@@ -197,6 +225,26 @@ const MemberManagement = () => {
                   <td style={tableCellStyle}>{member.gender || '-'}</td>
                   <td style={tableCellStyle}>{member.email}</td>
                   <td style={tableCellStyle}>{member.whatsapp || '-'}</td>
+                  <td style={tableCellStyle}>{member.phone || '-'}</td>
+                  <td style={tableCellStyle}>{member.socialMedia || '-'}</td>
+                  <td style={tableCellStyle}>
+                    <button
+                      onClick={() => handleToggleStatus(member.id)}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '0.375rem',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        background: member.isActive ? '#10b981' : '#f43f5e',
+                        color: 'white'
+                      }}
+                    >
+                      {member.isActive ? 'Active' : 'Inactive'}
+                    </button>
+                  </td>
+                  <td style={tableCellStyle}>{member.membershipDate || '-'}</td>
                   <td style={tableCellStyle}>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button onClick={() => handleOpenModal(member)} className="btn btn-sm btn-primary">
@@ -221,86 +269,135 @@ const MemberManagement = () => {
             <h2 style={{ marginBottom: '1.5rem' }}>{editingMember ? 'Edit Member' : 'Add New Member'}</h2>
             <form onSubmit={handleSubmit}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <input
-                  type="text"
-                  placeholder="First Name *"
-                  required
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  style={inputStyle}
-                />
-                <input
-                  type="text"
-                  placeholder="Last Name *"
-                  required
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  style={inputStyle}
-                />
-                <input
-                  type="text"
-                  placeholder="Username *"
-                  required
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  style={inputStyle}
-                />
-                <input
-                  type="email"
-                  placeholder="Email *"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  style={inputStyle}
-                />
-                {!editingMember && (
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>First Name *</label>
                   <input
-                    type="password"
-                    placeholder="Password *"
+                    type="text"
+                    placeholder="Enter first name"
                     required
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    style={inputStyle}
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    style={{ ...inputStyle, width: '100%' }}
                   />
+                </div>
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>Last Name *</label>
+                  <input
+                    type="text"
+                    placeholder="Enter last name"
+                    required
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    style={{ ...inputStyle, width: '100%' }}
+                  />
+                </div>
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>Username *</label>
+                  <input
+                    type="text"
+                    placeholder="Enter username"
+                    required
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    style={{ ...inputStyle, width: '100%' }}
+                  />
+                </div>
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>Email *</label>
+                  <input
+                    type="email"
+                    placeholder="Enter email address"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    style={{ ...inputStyle, width: '100%' }}
+                  />
+                </div>
+                {!editingMember && (
+                  <div style={formGroupStyle}>
+                    <label style={labelStyle}>Password *</label>
+                    <input
+                      type="password"
+                      placeholder="Enter password"
+                      required
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      style={{ ...inputStyle, width: '100%' }}
+                    />
+                  </div>
                 )}
-                <input
-                  type="date"
-                  placeholder="Birth Date"
-                  value={formData.birthDate}
-                  onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-                  style={inputStyle}
-                />
-                <select
-                  value={formData.gender}
-                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                  style={inputStyle}
-                >
-                  <option value="">Select Gender</option>
-                  <option value="MALE">Male</option>
-                  <option value="FEMALE">Female</option>
-                  <option value="OTHER">Other</option>
-                </select>
-                <input
-                  type="text"
-                  placeholder="Phone"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  style={inputStyle}
-                />
-                <input
-                  type="text"
-                  placeholder="WhatsApp"
-                  value={formData.whatsapp}
-                  onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                  style={inputStyle}
-                />
-                <input
-                  type="text"
-                  placeholder="Social Media"
-                  value={formData.socialMedia}
-                  onChange={(e) => setFormData({ ...formData, socialMedia: e.target.value })}
-                  style={inputStyle}
-                />
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>Birth Date</label>
+                  <input
+                    type="date"
+                    value={formData.birthDate}
+                    onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+                    style={{ ...inputStyle, width: '100%' }}
+                  />
+                </div>
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>Membership Date</label>
+                  <input
+                    type="date"
+                    value={formData.membershipDate}
+                    onChange={(e) => setFormData({ ...formData, membershipDate: e.target.value })}
+                    style={{ ...inputStyle, width: '100%' }}
+                  />
+                </div>
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>Gender</label>
+                  <select
+                    value={formData.gender}
+                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                    style={{ ...inputStyle, width: '100%' }}
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>Status</label>
+                  <select
+                    value={formData.active ? 'true' : 'false'}
+                    onChange={(e) => setFormData({ ...formData, active: e.target.value === 'true' })}
+                    style={{ ...inputStyle, width: '100%' }}
+                  >
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                  </select>
+                </div>
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>Phone</label>
+                  <input
+                    type="text"
+                    placeholder="Enter phone number"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    style={{ ...inputStyle, width: '100%' }}
+                  />
+                </div>
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>WhatsApp</label>
+                  <input
+                    type="text"
+                    placeholder="Enter WhatsApp number"
+                    value={formData.whatsapp}
+                    onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+                    style={{ ...inputStyle, width: '100%' }}
+                  />
+                </div>
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>Social Media</label>
+                  <input
+                    type="text"
+                    placeholder="Enter social media link"
+                    value={formData.socialMedia}
+                    onChange={(e) => setFormData({ ...formData, socialMedia: e.target.value })}
+                    style={{ ...inputStyle, width: '100%' }}
+                  />
+                </div>
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                 <button type="submit" className="btn btn-primary">
@@ -361,6 +458,20 @@ const inputStyle = {
   borderRadius: '0.5rem',
   color: 'var(--text-primary)',
   fontSize: '0.875rem'
+};
+
+const formGroupStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.35rem'
+};
+
+const labelStyle = {
+  fontSize: '0.8rem',
+  fontWeight: 600,
+  color: 'var(--text-muted)',
+  paddingLeft: '0.1rem',
+  textAlign: 'left'
 };
 
 export default MemberManagement;

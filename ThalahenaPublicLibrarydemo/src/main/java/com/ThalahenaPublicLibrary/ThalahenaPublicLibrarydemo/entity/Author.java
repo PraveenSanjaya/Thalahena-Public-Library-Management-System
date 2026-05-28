@@ -5,6 +5,8 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * SOLID Principles Applied:
  * 
@@ -42,5 +44,6 @@ public class Author {
     // mappedBy indicates that Book entity owns the relationship
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
+    @JsonIgnoreProperties("author")
     private List<Book> books = new ArrayList<>();
 }

@@ -232,7 +232,9 @@ const modalOverlayStyle = {
   left: 0,
   right: 0,
   bottom: 0,
-  background: 'rgba(0,0,0,0.7)',
+  background: 'rgba(15, 23, 42, 0.65)',
+  backdropFilter: 'none',
+  WebkitBackdropFilter: 'none',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -240,13 +242,16 @@ const modalOverlayStyle = {
 };
 
 const modalContentStyle = {
-  background: 'var(--bg-primary)',
+  background: '#ffffff',
+  color: '#0f172a',
   padding: '2rem',
   borderRadius: '1rem',
   maxWidth: '900px',
   width: '90%',
   maxHeight: '90vh',
-  overflow: 'auto'
+  overflow: 'auto',
+  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.05)',
+  border: '1px solid var(--border-light)'
 };
 
 export default StaffMemberManagement;

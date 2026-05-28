@@ -29,10 +29,11 @@ public class RegistrationDTO {
     private String phone;
     private String whatsapp;
     
-    @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
     
     @NotBlank(message = "Role is required")
     private String role; // STAFF or ADMIN
+
+    private Boolean isActive;
+    private Boolean active;
 }

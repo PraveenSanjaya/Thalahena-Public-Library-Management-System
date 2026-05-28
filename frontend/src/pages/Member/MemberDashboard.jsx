@@ -37,7 +37,7 @@ const MemberDashboard = () => {
           <div key={book.id} className="premium-card" style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ position: 'relative', height: '180px', background: 'rgba(255,255,255,0.02)', borderRadius: '0.75rem', marginBottom: '1rem', overflow: 'hidden' }}>
               {book.coverImage ? (
-                <img src={`http://localhost:8080${book.coverImage}`} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={`http://localhost:8081${book.coverImage}`} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>No Cover</div>
               )}

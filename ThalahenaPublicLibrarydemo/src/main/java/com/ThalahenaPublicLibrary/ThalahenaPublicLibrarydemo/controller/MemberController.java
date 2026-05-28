@@ -26,6 +26,17 @@ public class MemberController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @GetMapping("/search")
+    public ResponseEntity<List<MemberDTO>> searchMembers(@RequestParam String query) {
+        List<User> members = userRepository.searchMembers(query);
+        
+        List<MemberDTO> memberDTOs = members.stream()
+            .map(this::convertToMemberDTO)
+            .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(memberDTOs);
+    }
+
     @GetMapping
     public ResponseEntity<List<MemberDTO>> getAllMembers(
             @RequestParam(required = false) String search) {
@@ -67,8 +78,12 @@ public class MemberController {
         
         user.setRole(Role.MEMBER);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setMembershipDate(LocalDate.now());
-        user.setActive(true);
+        // Use the membership date from the request, default to today if not provided
+        if (user.getMembershipDate() == null) {
+            user.setMembershipDate(LocalDate.now());
+        }
+        // Ensure active status is properly set (defaults to true if not provided)
+        user.setActive(user.isActive());
         
         User savedUser = userRepository.save(user);
         return ResponseEntity.ok(convertToMemberDTO(savedUser));
@@ -86,6 +101,7 @@ public class MemberController {
                 user.setLastName(userDetails.getLastName());
                 user.setEmail(userDetails.getEmail());
                 user.setBirthDate(userDetails.getBirthDate());
+                user.setMembershipDate(userDetails.getMembershipDate());
                 user.setGender(userDetails.getGender());
                 user.setWhatsapp(userDetails.getWhatsapp());
                 user.setSocialMedia(userDetails.getSocialMedia());
@@ -111,6 +127,21 @@ public class MemberController {
                 }
                 userRepository.delete(user);
                 return ResponseEntity.ok("Member deleted successfully");
+            })
+            .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<?> toggleMemberStatus(@PathVariable Long id) {
+        return userRepository.findById(id)
+            .map(user -> {
+                if (user.getRole() != Role.MEMBER) {
+                    return ResponseEntity.badRequest().body("Error: User is not a member!");
+                }
+                
+                user.setActive(!user.isActive());
+                User updatedUser = userRepository.save(user);
+                return ResponseEntity.ok(convertToMemberDTO(updatedUser));
             })
             .orElse(ResponseEntity.notFound().build());
     }

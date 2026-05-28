@@ -58,6 +58,14 @@ public class RegistrationController {
             return ResponseEntity.badRequest().body("Error: Invalid role!");
         }
         
+        // Validate password
+        if (registrationDTO.getPassword() == null || registrationDTO.getPassword().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Error: Password is required!");
+        }
+        if (registrationDTO.getPassword().length() < 8) {
+            return ResponseEntity.badRequest().body("Error: Password must be at least 8 characters!");
+        }
+        
         // Create user
         User user = User.builder()
             .firstName(registrationDTO.getFirstName())
@@ -68,7 +76,8 @@ public class RegistrationController {
             .whatsapp(registrationDTO.getWhatsapp())
             .password(passwordEncoder.encode(registrationDTO.getPassword()))
             .role(role)
-            .isActive(true)
+            .isActive(registrationDTO.getIsActive() != null ? registrationDTO.getIsActive() : 
+                     (registrationDTO.getActive() != null ? registrationDTO.getActive() : true))
             .membershipDate(LocalDate.now())
             .build();
         
@@ -105,6 +114,9 @@ public class RegistrationController {
                 
                 // Update password if provided
                 if (registrationDTO.getPassword() != null && !registrationDTO.getPassword().isEmpty()) {
+                    if (registrationDTO.getPassword().length() < 8) {
+                        return ResponseEntity.badRequest().body("Error: Password must be at least 8 characters!");
+                    }
                     user.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
                 }
                 
@@ -114,6 +126,13 @@ public class RegistrationController {
                     if (newRole == Role.STAFF || newRole == Role.ADMIN) {
                         user.setRole(newRole);
                     }
+                }
+
+                // Update active status if provided
+                if (registrationDTO.getIsActive() != null) {
+                    user.setActive(registrationDTO.getIsActive());
+                } else if (registrationDTO.getActive() != null) {
+                    user.setActive(registrationDTO.getActive());
                 }
                 
                 User updatedUser = userRepository.save(user);

@@ -1,5 +1,6 @@
 package com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
@@ -27,6 +28,7 @@ public class User {
 
     private String profilePicture;
 
+    @Column(name = "is_active")
     private boolean isActive = true;
 
     private String otp;
@@ -111,10 +113,12 @@ public class User {
         this.profilePicture = profilePicture;
     }
 
+    @JsonProperty("active")
     public boolean isActive() {
         return isActive;
     }
 
+    @JsonProperty("active")
     public void setActive(boolean active) {
         isActive = active;
     }

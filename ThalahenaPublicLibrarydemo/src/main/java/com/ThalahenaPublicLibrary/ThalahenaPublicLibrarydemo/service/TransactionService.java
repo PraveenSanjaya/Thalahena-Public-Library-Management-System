@@ -210,6 +210,65 @@ public class TransactionService {
     }
 
     /**
+     * Update transaction status and/or book condition
+     * Allows manual editing of status and condition fields
+     */
+    @Transactional
+    public TransactionDTO updateTransaction(Long transactionId, String status, 
+                                             String bookCondition, String conditionNotes) {
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new RuntimeException("Transaction not found with ID: " + transactionId));
+
+        // Update status if provided
+        if (status != null && !status.isEmpty()) {
+            try {
+                TransactionStatus newStatus = TransactionStatus.valueOf(status.toUpperCase());
+                transaction.setStatus(newStatus);
+                
+                // If status is changed to RETURNED, set return date to today if not already set
+                if (newStatus == TransactionStatus.RETURNED && transaction.getReturnDate() == null) {
+                    transaction.setReturnDate(LocalDate.now());
+                    
+                    // Increase available copies
+                    Book book = transaction.getBook();
+                    book.setAvailableCopies(book.getAvailableCopies() + 1);
+                    bookRepository.save(book);
+                }
+                
+                // If status is changed from RETURNED to something else, decrease available copies
+                if (transaction.getReturnDate() != null && newStatus != TransactionStatus.RETURNED) {
+                    transaction.setReturnDate(null);
+                    Book book = transaction.getBook();
+                    if (book.getAvailableCopies() > 0) {
+                        book.setAvailableCopies(book.getAvailableCopies() - 1);
+                        bookRepository.save(book);
+                    }
+                }
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Invalid status: " + status);
+            }
+        }
+
+        // Update book condition if provided
+        if (bookCondition != null && !bookCondition.isEmpty()) {
+            try {
+                BookCondition condition = BookCondition.valueOf(bookCondition.toUpperCase());
+                transaction.setBookCondition(condition);
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Invalid book condition: " + bookCondition);
+            }
+        }
+        
+        // Update condition notes if provided
+        if (conditionNotes != null) {
+            transaction.setConditionNotes(conditionNotes);
+        }
+
+        Transaction savedTransaction = transactionRepository.save(transaction);
+        return convertToDTO(savedTransaction);
+    }
+
+    /**
      * Convert Transaction entity to DTO
      */
     private TransactionDTO convertToDTO(Transaction transaction) {

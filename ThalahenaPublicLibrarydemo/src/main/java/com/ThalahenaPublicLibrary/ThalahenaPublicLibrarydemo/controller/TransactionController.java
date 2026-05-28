@@ -103,4 +103,27 @@ public class TransactionController {
                     .body(new MessageResponse("Error returning book: " + e.getMessage()));
         }
     }
+
+    /**
+     * PUT /api/staff/transactions/{id}/update
+     * Update transaction status and/or book condition
+     */
+    @PutMapping("/{id}/update")
+    public ResponseEntity<?> updateTransaction(
+            @PathVariable Long id,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String bookCondition,
+            @RequestParam(required = false) String conditionNotes) {
+        try {
+            TransactionDTO transaction = transactionService.updateTransaction(
+                    id, status, bookCondition, conditionNotes);
+            return ResponseEntity.ok(transaction);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error updating transaction: " + e.getMessage()));
+        }
+    }
 }

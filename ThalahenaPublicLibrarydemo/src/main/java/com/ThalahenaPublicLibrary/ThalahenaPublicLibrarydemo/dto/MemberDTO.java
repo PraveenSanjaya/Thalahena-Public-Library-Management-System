@@ -1,5 +1,6 @@
 package com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,5 +27,7 @@ public class MemberDTO {
     private String socialMedia;
     private String phone;
     private String profilePicture;
+    
+    @JsonProperty("isActive")
     private boolean isActive;
 }

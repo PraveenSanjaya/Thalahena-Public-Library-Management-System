@@ -16,7 +16,8 @@ const RegistrationManagement = () => {
     phone: '',
     whatsapp: '',
     password: '',
-    role: 'STAFF'
+    role: 'STAFF',
+    isActive: true
   });
 
   useEffect(() => {
@@ -37,6 +38,7 @@ const RegistrationManagement = () => {
   const handleOpenModal = (user = null) => {
     if (user) {
       setEditingUser(user);
+      const userActive = user.isActive !== undefined ? user.isActive : (user.active !== undefined ? user.active : true);
       setFormData({
         firstName: user.firstName || '',
         lastName: user.lastName || '',
@@ -45,7 +47,8 @@ const RegistrationManagement = () => {
         phone: user.phone || '',
         whatsapp: user.whatsapp || '',
         password: '',
-        role: user.role || 'STAFF'
+        role: user.role || 'STAFF',
+        isActive: userActive
       });
     } else {
       setEditingUser(null);
@@ -57,7 +60,8 @@ const RegistrationManagement = () => {
         phone: '',
         whatsapp: '',
         password: '',
-        role: 'STAFF'
+        role: 'STAFF',
+        isActive: true
       });
     }
     setShowModal(true);
@@ -65,11 +69,15 @@ const RegistrationManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const payload = {
+      ...formData,
+      active: formData.isActive
+    };
     try {
       if (editingUser) {
-        await api.put(`/admin/registrations/${editingUser.id}`, formData);
+        await api.put(`/admin/registrations/${editingUser.id}`, payload);
       } else {
-        await api.post('/admin/registrations', formData);
+        await api.post('/admin/registrations', payload);
       }
       setShowModal(false);
       fetchUsers();
@@ -129,50 +137,57 @@ const RegistrationManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
-                <tr key={user.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <td style={tableCellStyle}>{user.id}</td>
-                  <td style={tableCellStyle}>{user.firstName || '-'}</td>
-                  <td style={tableCellStyle}>{user.lastName || '-'}</td>
-                  <td style={tableCellStyle}>{user.username}</td>
-                  <td style={tableCellStyle}>{user.email}</td>
-                  <td style={tableCellStyle}>{user.phone || '-'}</td>
-                  <td style={tableCellStyle}>
-                    <span style={{
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '0.25rem',
-                      background: user.role === 'ADMIN' ? 'var(--danger)' : 'var(--warning)',
-                      color: 'white',
-                      fontSize: '0.75rem',
-                      fontWeight: 600
-                    }}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td style={tableCellStyle}>
-                    <span style={{
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '0.25rem',
-                      background: user.isActive ? 'var(--success)' : 'var(--text-muted)',
-                      color: 'white',
-                      fontSize: '0.75rem',
-                      fontWeight: 600
-                    }}>
-                      {user.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td style={tableCellStyle}>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button onClick={() => handleOpenModal(user)} className="btn btn-sm btn-primary">
-                        <Edit2 size={16} />
-                      </button>
-                      <button onClick={() => handleDelete(user.id)} className="btn btn-sm btn-danger">
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {users.map((user) => {
+                const isActive = user.isActive !== undefined ? user.isActive : user.active;
+                return (
+                  <tr key={user.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <td style={tableCellStyle}>{user.id}</td>
+                    <td style={tableCellStyle}>{user.firstName || '-'}</td>
+                    <td style={tableCellStyle}>{user.lastName || '-'}</td>
+                    <td style={tableCellStyle}>{user.username}</td>
+                    <td style={tableCellStyle}>{user.email}</td>
+                    <td style={tableCellStyle}>{user.phone || '-'}</td>
+                    <td style={tableCellStyle}>
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '50px',
+                        background: user.role === 'ADMIN' ? '#ede9fe' : '#e0f2fe',
+                        color: user.role === 'ADMIN' ? '#6d28d9' : '#0369a1',
+                        border: user.role === 'ADMIN' ? '1px solid #ddd6fe' : '1px solid #bae6fd',
+                        fontSize: '0.75rem',
+                        fontWeight: 600
+                      }}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td style={tableCellStyle}>
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '50px',
+                        background: isActive ? '#d1fae5' : '#fee2e2',
+                        color: isActive ? '#065f46' : '#991b1b',
+                        border: isActive ? '1px solid #a7f3d0' : '1px solid #fecaca',
+                        fontSize: '0.75rem',
+                        fontWeight: 600
+                      }}>
+                        {isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td style={tableCellStyle}>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button onClick={() => handleOpenModal(user)} className="btn btn-sm btn-primary">
+                          <Edit2 size={16} />
+                        </button>
+                        <button onClick={() => handleDelete(user.id)} className="btn btn-sm btn-danger">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -182,80 +197,161 @@ const RegistrationManagement = () => {
       {showModal && (
         <div style={modalOverlayStyle} onClick={() => setShowModal(false)}>
           <div style={modalContentStyle} onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ marginBottom: '1.5rem' }}>{editingUser ? 'Edit User' : 'Create New User'}</h2>
+            <h2 style={{ marginBottom: '1.5rem', color: '#0f172a', fontWeight: 700 }}>
+              {editingUser ? 'Edit User' : 'Create New User'}
+            </h2>
             <form onSubmit={handleSubmit}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <input
-                  type="text"
-                  placeholder="First Name *"
-                  required
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  style={inputStyle}
-                />
-                <input
-                  type="text"
-                  placeholder="Last Name *"
-                  required
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  style={inputStyle}
-                />
-                <input
-                  type="text"
-                  placeholder="Username *"
-                  required
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  style={inputStyle}
-                />
-                <input
-                  type="email"
-                  placeholder="Email *"
-                  required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  style={inputStyle}
-                />
-                <input
-                  type="text"
-                  placeholder="Phone"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  style={inputStyle}
-                />
-                <input
-                  type="text"
-                  placeholder="WhatsApp"
-                  value={formData.whatsapp}
-                  onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
-                  style={inputStyle}
-                />
-                <input
-                  type="password"
-                  placeholder={editingUser ? "Password (leave blank to keep current)" : "Password *"}
-                  required={!editingUser}
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  style={inputStyle}
-                />
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  style={inputStyle}
-                  required
-                >
-                  <option value="STAFF">Staff</option>
-                  <option value="ADMIN">Admin</option>
-                </select>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                
+                {/* ID field */}
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>ID</label>
+                  <input
+                    type="text"
+                    disabled
+                    value={editingUser ? editingUser.id : 'Auto-generated'}
+                    style={{ ...inputStyle, background: '#f1f5f9', cursor: 'not-allowed', color: '#64748b' }}
+                  />
+                </div>
+
+                {/* Username field */}
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>Username *</label>
+                  <input
+                    type="text"
+                    placeholder="Enter username"
+                    required
+                    disabled={!!editingUser}
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    style={{ 
+                      ...inputStyle, 
+                      background: editingUser ? '#f1f5f9' : '#f8fafc',
+                      cursor: editingUser ? 'not-allowed' : 'text',
+                      color: editingUser ? '#64748b' : '#0f172a'
+                    }}
+                  />
+                </div>
+
+                {/* First Name field */}
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>First Name *</label>
+                  <input
+                    type="text"
+                    placeholder="Enter first name"
+                    required
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
+
+                {/* Last Name field */}
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>Last Name *</label>
+                  <input
+                    type="text"
+                    placeholder="Enter last name"
+                    required
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
+
+                {/* Email field */}
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>Email *</label>
+                  <input
+                    type="email"
+                    placeholder="Enter email address"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
+
+                {/* Phone field */}
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>Phone</label>
+                  <input
+                    type="text"
+                    placeholder="Enter phone number"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
+
+                {/* WhatsApp field */}
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>WhatsApp</label>
+                  <input
+                    type="text"
+                    placeholder="Enter WhatsApp number"
+                    value={formData.whatsapp}
+                    onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
+
+                {/* Password field */}
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>
+                    {editingUser ? 'Password (leave blank to keep current)' : 'Password *'}
+                  </label>
+                  <input
+                    type="password"
+                    placeholder={editingUser ? "Leave blank to keep current" : "Enter password (min 8 chars)"}
+                    required={!editingUser}
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    style={inputStyle}
+                  />
+                </div>
+
+                {/* Role field */}
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>Role *</label>
+                  <select
+                    value={formData.role}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                    style={inputStyle}
+                    required
+                  >
+                    <option value="STAFF">Staff</option>
+                    <option value="ADMIN">Admin</option>
+                  </select>
+                </div>
+
+                {/* Status field */}
+                <div style={formGroupStyle}>
+                  <label style={labelStyle}>Status *</label>
+                  <select
+                    value={formData.isActive ? 'true' : 'false'}
+                    onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'true' })}
+                    style={inputStyle}
+                    required
+                  >
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                  </select>
+                </div>
+
               </div>
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                <button type="submit" className="btn btn-primary">
-                  {editingUser ? 'Update' : 'Create'}
-                </button>
-                <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary">
-                  Cancel
-                </button>
+
+              {/* Actions Section */}
+              <div style={{ ...formGroupStyle, marginTop: '1.5rem', borderTop: '1px solid #e2e8f0', paddingTop: '1.25rem' }}>
+                <label style={{ ...labelStyle, fontSize: '0.85rem', color: '#1e293b', marginBottom: '0.25rem' }}>Actions</label>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button type="submit" className="btn btn-primary" style={{ padding: '0.6rem 1.5rem', fontSize: '0.875rem' }}>
+                    {editingUser ? 'Update' : 'Create'}
+                  </button>
+                  <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary" style={{ padding: '0.6rem 1.5rem', fontSize: '0.875rem' }}>
+                    Cancel
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -284,7 +380,9 @@ const modalOverlayStyle = {
   left: 0,
   right: 0,
   bottom: 0,
-  background: 'rgba(0,0,0,0.7)',
+  background: 'rgba(15, 23, 42, 0.65)',
+  backdropFilter: 'none',
+  WebkitBackdropFilter: 'none',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -292,22 +390,42 @@ const modalOverlayStyle = {
 };
 
 const modalContentStyle = {
-  background: 'var(--bg-primary)',
+  background: '#ffffff',
+  color: '#0f172a',
   padding: '2rem',
   borderRadius: '1rem',
   maxWidth: '700px',
-  width: '90%',
+  width: '95%',
   maxHeight: '90vh',
-  overflow: 'auto'
+  overflow: 'auto',
+  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+  border: '1px solid #e2e8f0'
 };
 
 const inputStyle = {
   padding: '0.75rem',
-  background: 'var(--bg-secondary)',
-  border: '1px solid var(--border-color)',
+  background: '#f8fafc',
+  border: '1px solid #cbd5e1',
   borderRadius: '0.5rem',
-  color: 'var(--text-primary)',
-  fontSize: '0.875rem'
+  color: '#0f172a',
+  fontSize: '0.875rem',
+  width: '100%',
+  outline: 'none',
+  boxSizing: 'border-box'
+};
+
+const formGroupStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.35rem'
+};
+
+const labelStyle = {
+  fontSize: '0.8rem',
+  fontWeight: 600,
+  color: '#475569',
+  paddingLeft: '0.1rem',
+  textAlign: 'left'
 };
 
 export default RegistrationManagement;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
-import { BookPlus, RotateCcw, AlertTriangle, CheckCircle, Clock, TrendingUp } from 'lucide-react';
+import { BookPlus, RotateCcw, AlertTriangle, CheckCircle, Clock, TrendingUp, Edit2 } from 'lucide-react';
 
 const TransactionManagement = () => {
   const [transactions, setTransactions] = useState([]);
@@ -12,6 +12,8 @@ const TransactionManagement = () => {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [books, setBooks] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({ status: '', bookCondition: '', conditionNotes: '' });
   
   const [issueData, setIssueData] = useState({ userId: '', bookId: '' });
   const [returnData, setReturnData] = useState({ 
@@ -170,6 +172,45 @@ const TransactionManagement = () => {
     }
   };
 
+  const startEditing = (transaction) => {
+    setEditingId(transaction.id);
+    setEditData({
+      status: transaction.status || '',
+      bookCondition: transaction.bookCondition || '',
+      conditionNotes: transaction.conditionNotes || ''
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditData({ status: '', bookCondition: '', conditionNotes: '' });
+  };
+
+  const saveEdit = async (transactionId) => {
+    setLoading(true);
+    try {
+      await api.put(`/staff/transactions/${transactionId}/update`, null, {
+        params: {
+          status: editData.status,
+          bookCondition: editData.bookCondition,
+          conditionNotes: editData.conditionNotes
+        }
+      });
+      cancelEditing();
+      fetchTransactions();
+      fetchCounters();
+    } catch (error) {
+      console.error('Error updating transaction:', error);
+      alert('Failed to update transaction: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditChange = (field, value) => {
+    setEditData({ ...editData, [field]: value });
+  };
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -276,10 +317,30 @@ const TransactionManagement = () => {
                 <td style={{ padding: '1rem' }}>{t.dueDate}</td>
                 <td style={{ padding: '1rem' }}>{t.returnDate || '-'}</td>
                 <td style={{ padding: '1rem' }}>
-                  {t.bookCondition ? (
+                  {editingId === t.id ? (
+                    <select
+                      value={editData.bookCondition}
+                      onChange={(e) => handleEditChange('bookCondition', e.target.value)}
+                      style={{ 
+                        padding: '0.5rem',
+                        borderRadius: '0.375rem',
+                        border: '1px solid var(--border-color)',
+                        background: 'var(--bg-secondary)',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.875rem',
+                        fontWeight: 600
+                      }}
+                    >
+                      <option value="GOOD">Good</option>
+                      <option value="FAIR">Fair</option>
+                      <option value="POOR">Poor</option>
+                      <option value="DAMAGED">Damaged</option>
+                    </select>
+                  ) : t.bookCondition ? (
                     <span style={{ 
                       fontWeight: 600,
                       color: t.bookCondition === 'GOOD' ? 'var(--success)' : 
+                             t.bookCondition === 'FAIR' ? 'var(--warning)' :
                              t.bookCondition === 'POOR' ? 'var(--warning)' : 'var(--danger)'
                     }}>
                       {t.bookCondition}
@@ -289,9 +350,29 @@ const TransactionManagement = () => {
                   )}
                 </td>
                 <td style={{ padding: '1rem' }}>
-                  <span className={`badge ${getStatusBadgeClass(t.status)}`}>
-                    {t.status}
-                  </span>
+                  {editingId === t.id ? (
+                    <select
+                      value={editData.status}
+                      onChange={(e) => handleEditChange('status', e.target.value)}
+                      style={{ 
+                        padding: '0.5rem',
+                        borderRadius: '0.375rem',
+                        border: '1px solid var(--border-color)',
+                        background: 'var(--bg-secondary)',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.875rem',
+                        fontWeight: 600
+                      }}
+                    >
+                      <option value="ISSUED">Borrowed</option>
+                      <option value="RETURNED">Returned</option>
+                      <option value="OVERDUE">Overdue</option>
+                    </select>
+                  ) : (
+                    <span className={`badge ${getStatusBadgeClass(t.status)}`}>
+                      {t.status === 'ISSUED' ? 'Borrowed' : t.status === 'RETURNED' ? 'Returned' : 'Overdue'}
+                    </span>
+                  )}
                 </td>
                 <td style={{ padding: '1rem' }}>
                   {t.fineAmount > 0 ? (
@@ -301,27 +382,91 @@ const TransactionManagement = () => {
                   )}
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'right' }}>
-                  {(t.status === 'ISSUED' || t.status === 'OVERDUE') && (
-                    <button 
-                      onClick={() => openReturnModal(t)}
-                      disabled={loading}
-                      style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '0.25rem', 
-                        background: 'var(--primary)', 
-                        border: 'none', 
-                        color: 'white', 
-                        padding: '0.5rem 1rem', 
-                        borderRadius: '0.4rem', 
-                        cursor: 'pointer', 
-                        fontSize: '0.875rem',
-                        marginLeft: 'auto'
-                      }}
-                    >
-                      <RotateCcw size={14} /> Return
-                    </button>
-                  )}
+                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                    {editingId === t.id ? (
+                      <>
+                        <button 
+                          onClick={() => saveEdit(t.id)}
+                          disabled={loading}
+                          style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '0.25rem', 
+                            background: 'var(--success)', 
+                            border: 'none', 
+                            color: 'white', 
+                            padding: '0.5rem 1rem', 
+                            borderRadius: '0.4rem', 
+                            cursor: loading ? 'not-allowed' : 'pointer', 
+                            fontSize: '0.875rem',
+                            opacity: loading ? 0.6 : 1
+                          }}
+                        >
+                          <CheckCircle size={14} /> Save
+                        </button>
+                        <button 
+                          onClick={cancelEditing}
+                          disabled={loading}
+                          style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '0.25rem', 
+                            background: 'var(--text-muted)', 
+                            border: 'none', 
+                            color: 'white', 
+                            padding: '0.5rem 1rem', 
+                            borderRadius: '0.4rem', 
+                            cursor: loading ? 'not-allowed' : 'pointer', 
+                            fontSize: '0.875rem',
+                            opacity: loading ? 0.6 : 1
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button 
+                          onClick={() => startEditing(t)}
+                          disabled={loading}
+                          style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '0.25rem', 
+                            background: 'var(--primary)', 
+                            border: 'none', 
+                            color: 'white', 
+                            padding: '0.5rem 1rem', 
+                            borderRadius: '0.4rem', 
+                            cursor: 'pointer', 
+                            fontSize: '0.875rem'
+                          }}
+                        >
+                          <Edit2 size={14} /> Edit
+                        </button>
+                        {(t.status === 'ISSUED' || t.status === 'OVERDUE') && (
+                          <button 
+                            onClick={() => openReturnModal(t)}
+                            disabled={loading}
+                            style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '0.25rem', 
+                              background: 'var(--warning)', 
+                              border: 'none', 
+                              color: 'white', 
+                              padding: '0.5rem 1rem', 
+                              borderRadius: '0.4rem', 
+                              cursor: 'pointer', 
+                              fontSize: '0.875rem'
+                            }}
+                          >
+                            <RotateCcw size={14} /> Return
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -515,8 +660,9 @@ const TransactionManagement = () => {
                 >
                   <option value="">Select condition</option>
                   <option value="GOOD">Good (No damage)</option>
-                  <option value="POOR">Poor (Minor wear)</option>
-                  <option value="DAMAGED">Damaged (Significant damage)</option>
+                  <option value="FAIR">Fair (Minor wear)</option>
+                  <option value="POOR">Poor (Significant wear)</option>
+                  <option value="DAMAGED">Damaged (Severe damage)</option>
                 </select>
               </div>
 

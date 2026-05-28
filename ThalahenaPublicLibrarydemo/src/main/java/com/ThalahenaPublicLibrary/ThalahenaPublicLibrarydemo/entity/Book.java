@@ -3,6 +3,8 @@ package com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Table(name = "books", indexes = {
     @Index(name = "idx_title", columnList = "title"),
@@ -23,6 +25,7 @@ public class Book {
 
     @ManyToOne
     @JoinColumn(name = "author_id")
+    @JsonIgnoreProperties("books")
     private Author author;
 
     @Column(unique = true)

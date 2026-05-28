@@ -12,6 +12,19 @@ const BookManagement = () => {
   const [coverPreview, setCoverPreview] = useState(null);
   const [coverFile, setCoverFile] = useState(null);
   
+  const categories = [
+    { code: '000', name: 'Generalities', icon: '📚' },
+    { code: '100', name: 'Philosophy', icon: '💭' },
+    { code: '200', name: 'Religion', icon: '🙏' },
+    { code: '300', name: 'Social Studies', icon: '👥' },
+    { code: '400', name: 'Language', icon: '💬' },
+    { code: '500', name: 'Natural Science and Mathematics', icon: '🔬' },
+    { code: '600', name: 'Technology', icon: '⚙️' },
+    { code: '700', name: 'Arts', icon: '🎨' },
+    { code: '800', name: 'Literature', icon: '📖' },
+    { code: '900', name: 'Geology and History', icon: '🌍' }
+  ];
+  
   const [formData, setFormData] = useState({
     title: '',
     authorId: '',
@@ -479,26 +492,60 @@ const BookManagement = () => {
                   />
                 </div>
 
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
-                    Category *
-                  </label>
-                  <input
-                    type="text"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleInputChange}
-                    required
-                    style={{ 
-                      width: '100%', 
-                      padding: '0.75rem',
-                      borderRadius: '0.5rem',
-                      border: '1px solid var(--border-color)',
-                      background: 'var(--bg-secondary)',
-                      color: 'var(--text-primary)'
-                    }}
-                  />
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.75rem', fontWeight: 500 }}>
+                  Category *
+                </label>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+                  gap: '0.75rem'
+                }}>
+                  {categories.map((cat) => (
+                    <div
+                      key={cat.code}
+                      onClick={() => setFormData({ ...formData, category: `${cat.code} - ${cat.name}` })}
+                      style={{
+                        padding: '1rem',
+                        borderRadius: '0.75rem',
+                        border: formData.category === `${cat.code} - ${cat.name}` ? '2px solid var(--primary-color)' : '2px solid var(--border-color)',
+                        background: formData.category === `${cat.code} - ${cat.name}` ? 'rgba(99, 102, 241, 0.1)' : 'var(--bg-secondary)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        textAlign: 'center',
+                        boxShadow: formData.category === `${cat.code} - ${cat.name}` ? '0 4px 12px rgba(99, 102, 241, 0.3)' : 'none'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (formData.category !== `${cat.code} - ${cat.name}`) {
+                          e.currentTarget.style.borderColor = 'var(--primary-color)';
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (formData.category !== `${cat.code} - ${cat.name}`) {
+                          e.currentTarget.style.borderColor = 'var(--border-color)';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                        }
+                      }}
+                    >
+                      <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
+                        {cat.icon}
+                      </div>
+                      <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-primary)' }}>
+                        {cat.code}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                        {cat.name}
+                      </div>
+                    </div>
+                  ))}
                 </div>
+                {formData.category && (
+                  <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '0.5rem', fontSize: '0.875rem', color: 'var(--primary-color)' }}>
+                    Selected: <strong>{formData.category}</strong>
+                  </div>
+                )}
+              </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
