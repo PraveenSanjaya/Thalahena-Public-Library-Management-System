@@ -21,6 +21,7 @@ public class NotificationDTO {
     private String userName;
     private String title;
     private String message;
+    private String type;
     private Boolean isRead;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

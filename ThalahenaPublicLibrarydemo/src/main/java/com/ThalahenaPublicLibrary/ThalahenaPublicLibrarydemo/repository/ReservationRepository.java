@@ -25,4 +25,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     // Get all reservations with user and book details
     @Query("SELECT r FROM Reservation r JOIN r.user u JOIN r.book b ORDER BY r.reservationDate DESC")
     List<Reservation> findAllWithDetails();
+
+    @Query("SELECT r FROM Reservation r JOIN r.user u JOIN r.book b WHERE u.id = :userId ORDER BY r.reservationDate DESC")
+    List<Reservation> findByUserIdWithDetails(@org.springframework.data.repository.query.Param("userId") Long userId);
 }

@@ -18,8 +18,9 @@ import java.util.List;
  * OCP: Can add new endpoints without modifying existing ones
  * DIP: Depends on NotificationService abstraction
  */
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/api/staff/notifications")
+@RequestMapping("/api/notifications")
 @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
 public class NotificationController {
 
@@ -27,7 +28,7 @@ public class NotificationController {
     private NotificationService notificationService;
 
     /**
-     * GET /api/staff/notifications?search=...
+     * GET /api/notifications?search=...
      * Get all notifications with optional search
      */
     @GetMapping
@@ -38,7 +39,7 @@ public class NotificationController {
     }
 
     /**
-     * GET /api/staff/notifications/{id}
+     * GET /api/notifications/{id}
      * Get single notification
      */
     @GetMapping("/{id}")
@@ -53,7 +54,7 @@ public class NotificationController {
     }
 
     /**
-     * POST /api/staff/notifications
+     * POST /api/notifications
      * Create a new notification (broadcast to all members)
      */
     @PostMapping
@@ -71,7 +72,7 @@ public class NotificationController {
     }
 
     /**
-     * PUT /api/staff/notifications/{id}
+     * PUT /api/notifications/{id}
      * Update an existing notification
      */
     @PutMapping("/{id}")
@@ -94,7 +95,37 @@ public class NotificationController {
     }
 
     /**
-     * DELETE /api/staff/notifications/{id}
+     * PUT /api/notifications/{id}/read
+     * Mark a notification as read
+     */
+    @PutMapping("/{id}/read")
+    public ResponseEntity<?> markAsRead(@PathVariable Long id) {
+        try {
+            notificationService.markAsRead(id);
+            return ResponseEntity.ok(new MessageResponse("Notification marked as read"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * PUT /api/notifications/read-all
+     * Mark all notifications as read
+     */
+    @PutMapping("/read-all")
+    public ResponseEntity<?> markAllAsRead() {
+        try {
+            notificationService.markAllAsRead();
+            return ResponseEntity.ok(new MessageResponse("All notifications marked as read"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error marking notifications as read: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * DELETE /api/notifications/{id}
      * Delete a notification
      */
     @DeleteMapping("/{id}")

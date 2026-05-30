@@ -18,7 +18,7 @@ const MemberDashboard = () => {
 
   const reserveBook = async (bookId) => {
     try {
-      await api.post('/reservations', { user: { id: user.id }, book: { id: bookId } });
+      await api.post('/reservations', { userId: user.userId, bookId: bookId });
       alert('Reservation successful!');
     } catch (err) {
       alert('Failed to reserve book');

@@ -10,4 +10,8 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
     
     // Get recent feedback
     List<Feedback> findTop5ByOrderByCreatedAtDesc();
+
+    // Sorted feedback queries
+    List<Feedback> findByUserIdOrderByCreatedAtDesc(Long userId);
+    List<Feedback> findAllByOrderByCreatedAtDesc();
 }

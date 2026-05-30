@@ -1,21 +1,92 @@
 import React from 'react';
 import authService from '../../services/auth.service';
-import { Bell, Search, User } from 'lucide-react';
+import { Bell, User, Printer, FileDown } from 'lucide-react';
 
 const Navbar = () => {
   const user = authService.getCurrentUser();
 
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleDownloadPDF = () => {
+    const originalTitle = document.title;
+    document.title = 'Thalahena_Library_Report';
+    window.print();
+    document.title = originalTitle;
+  };
+
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <div style={{ position: 'relative', width: '300px' }}>
-        <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
-        <input 
-          type="text" 
-          placeholder="Search for books, authors..." 
-          style={{ paddingLeft: '2.5rem' }} 
-        />
+      {/* Action Buttons */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <button
+          onClick={handlePrint}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.5rem 1.1rem',
+            background: 'var(--primary)',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '0.5rem',
+            fontWeight: 600,
+            fontSize: '0.875rem',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            fontFamily: 'Outfit, sans-serif',
+            boxShadow: '0 2px 8px rgba(99,102,241,0.25)',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'var(--primary-hover)';
+            e.currentTarget.style.transform = 'translateY(-1px)';
+            e.currentTarget.style.boxShadow = '0 4px 14px rgba(99,102,241,0.35)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'var(--primary)';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(99,102,241,0.25)';
+          }}
+        >
+          <Printer size={16} />
+          Print Report
+        </button>
+
+        <button
+          onClick={handleDownloadPDF}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.5rem 1.1rem',
+            background: '#ffffff',
+            color: 'var(--primary)',
+            border: '1.5px solid var(--primary)',
+            borderRadius: '0.5rem',
+            fontWeight: 600,
+            fontSize: '0.875rem',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            fontFamily: 'Outfit, sans-serif',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'rgba(99,102,241,0.06)';
+            e.currentTarget.style.transform = 'translateY(-1px)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(99,102,241,0.15)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = '#ffffff';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+        >
+          <FileDown size={16} />
+          Download PDF
+        </button>
       </div>
 
+      {/* Right Side: Bell + User */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
         <div style={{ position: 'relative', cursor: 'pointer' }}>
           <Bell size={20} className="text-muted" />
@@ -28,7 +99,7 @@ const Navbar = () => {
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user?.roles?.[0] || 'Guest'}</p>
           </div>
           <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyItems: 'center', justifyContent: 'center' }}>
-            <User size={20} />
+            <User size={20} color="#fff" />
           </div>
         </div>
       </div>

@@ -6,17 +6,6 @@ import java.time.LocalDateTime;
 
 /**
  * Notification Entity - Represents system notifications/broadcasts
- * 
- * SRP (Single Responsibility Principle):
- * - Only represents notification data, no business logic
- * - Supports both user-specific and broadcast notifications
- * 
- * OCP (Open/Closed Principle):
- * - Can add new fields (e.g., priority, category) without modifying existing ones
- * - Extensible for different notification types
- * 
- * DIP (Dependency Inversion Principle):
- * - Optional dependency on User (nullable for broadcasts)
  */
 @Entity
 @Table(name = "notifications", indexes = {
@@ -38,11 +27,14 @@ public class Notification {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(nullable = false)
     private String title;
     
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
+
+    // Notification type: GENERAL, DUE_DATE, OVERDUE, RESERVATION
+    @Builder.Default
+    private String type = "GENERAL";
     
     @Builder.Default
     private Boolean isRead = false;

@@ -13,7 +13,7 @@ const Profile = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await api.put(`/users/${user.id}`, profile);
+      await api.put(`/users/${user.userId}`, profile);
       alert('Profile updated! Please log in again if email changed.');
     } catch (err) {
       alert('Update failed');

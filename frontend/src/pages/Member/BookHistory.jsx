@@ -11,7 +11,7 @@ const BookHistory = () => {
   }, []);
 
   const fetchHistory = async () => {
-    const res = await api.get(`/transactions/user/${user.id}`);
+    const res = await api.get(`/transactions/user/${user.userId}`);
     setHistory(res.data);
   };
 

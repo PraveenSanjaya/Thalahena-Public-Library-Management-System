@@ -77,6 +77,7 @@ public class TransactionController {
     /**
      * PUT /api/staff/transactions/return/{issueId}
      * Return a book
+     * SRP: Only handles HTTP request/response, delegates to TransactionService
      */
     @PutMapping("/return/{issueId}")
     public ResponseEntity<?> returnBook(
@@ -85,13 +86,27 @@ public class TransactionController {
             @RequestParam(required = false) String bookCondition,
             @RequestParam(required = false) String conditionNotes) {
         try {
-            BookCondition condition = bookCondition != null ? 
-                    BookCondition.valueOf(bookCondition) : null;
+            // Validation: Return Date cannot be empty
+            if (returnDate == null) {
+                return ResponseEntity.badRequest()
+                        .body(new MessageResponse("Return Date is required"));
+            }
+            
+            // Validation: Book Condition is mandatory
+            if (bookCondition == null || bookCondition.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(new MessageResponse("Book Condition is required"));
+            }
+            
+            BookCondition condition = BookCondition.valueOf(bookCondition);
             
             TransactionDTO transaction = transactionService.returnBook(
                     issueId, returnDate, condition, conditionNotes);
             
             return ResponseEntity.ok(transaction);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Invalid book condition: " + bookCondition));
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest()
                     .body(new MessageResponse(e.getMessage()));

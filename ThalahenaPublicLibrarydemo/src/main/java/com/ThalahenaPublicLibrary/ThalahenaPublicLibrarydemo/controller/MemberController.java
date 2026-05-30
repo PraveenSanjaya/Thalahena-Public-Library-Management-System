@@ -15,6 +15,7 @@ import java.time.Period;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/admin/members")
 @PreAuthorize("hasRole('ADMIN')")
@@ -28,13 +29,20 @@ public class MemberController {
 
     @GetMapping("/search")
     public ResponseEntity<List<MemberDTO>> searchMembers(@RequestParam String query) {
-        List<User> members = userRepository.searchMembers(query);
+        // Use Java-side filtering for robust search (avoids JPQL enum issues)
+        List<User> allMembers = userRepository.findAllMembers();
+        String lowerQuery = query.toLowerCase().trim();
         
-        List<MemberDTO> memberDTOs = members.stream()
+        List<MemberDTO> filtered = allMembers.stream()
+            .filter(u -> 
+                (u.getFirstName() != null && u.getFirstName().toLowerCase().contains(lowerQuery)) ||
+                (u.getLastName() != null && u.getLastName().toLowerCase().contains(lowerQuery)) ||
+                (u.getUsername() != null && u.getUsername().toLowerCase().contains(lowerQuery)) ||
+                (u.getEmail() != null && u.getEmail().toLowerCase().contains(lowerQuery)))
             .map(this::convertToMemberDTO)
             .collect(Collectors.toList());
         
-        return ResponseEntity.ok(memberDTOs);
+        return ResponseEntity.ok(filtered);
     }
 
     @GetMapping

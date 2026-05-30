@@ -23,15 +23,17 @@ const Sidebar = () => {
     { name: 'Fines', path: '/staff/fines', icon: <DollarSign size={20} /> },
     { name: 'Reservations', path: '/staff/reservations', icon: <BookmarkPlus size={20} /> },
     { name: 'Notifications', path: '/staff/notifications', icon: <Bell size={20} /> },
-    { name: 'Feedback', path: '/member/feedback', icon: <MessageSquare size={20} /> },
-    { name: 'About', path: '/admin/about', icon: <FileText size={20} /> },
+    { name: 'Feedback', path: '/feedback', icon: <MessageSquare size={20} /> },
+    { name: 'About', path: '/about', icon: <FileText size={20} /> },
   ];
 
   const memberLinks = [
     { name: 'Dashboard', path: '/member', icon: <LayoutDashboard size={20} /> },
     { name: 'Book History', path: '/member/history', icon: <History size={20} /> },
     { name: 'My Reservations', path: '/member/reservations', icon: <BookmarkPlus size={20} /> },
-    { name: 'Feedback', path: '/member/feedback', icon: <MessageSquare size={20} /> },
+    { name: 'Feedback', path: '/feedback', icon: <MessageSquare size={20} /> },
+    { name: 'Additional Service', path: '/member/additional-service', icon: <BookOpen size={20} /> },
+    { name: 'About', path: '/about', icon: <FileText size={20} /> },
   ];
 
   const links = role === 'ADMIN' 

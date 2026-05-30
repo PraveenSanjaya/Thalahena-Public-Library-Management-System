@@ -12,6 +12,13 @@ import java.util.List;
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     List<Transaction> findByUser(User user);
     
+    /**
+     * Find all active (ISSUED or OVERDUE) transactions for a specific user
+     * Used to enforce: One member can borrow only ONE book at a time
+     */
+    @Query("SELECT t FROM Transaction t WHERE t.user = :user AND t.status IN ('ISSUED', 'OVERDUE')")
+    List<Transaction> findActiveTransactionsByUser(@Param("user") User user);
+    
     // Find transactions by userId ordered by issue date
     List<Transaction> findByUserIdOrderByIssueDateDesc(Long userId);
     

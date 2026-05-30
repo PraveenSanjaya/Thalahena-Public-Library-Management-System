@@ -2,7 +2,9 @@ package com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.service;
 
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.dto.NotificationDTO;
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.entity.Notification;
+import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.entity.User;
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.repository.NotificationRepository;
+import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,27 +15,15 @@ import java.util.stream.Collectors;
 
 /**
  * Notification Service - Handles all business logic for notification management
- * 
- * SRP (Single Responsibility Principle):
- * - This service ONLY handles notification business logic
- * - Does NOT handle HTTP concerns (that's the controller's job)
- * - Does NOT handle database access directly (that's the repository's job)
- * - Single purpose: create, update, delete, and retrieve notifications
- * 
- * OCP (Open/Closed Principle):
- * - Open for extension: Can add new notification types or delivery methods
- * - Closed for modification: Existing methods won't need changes for new features
- * - Future: Can add email notifications, push notifications, etc.
- * 
- * DIP (Dependency Inversion Principle):
- * - Depends on NotificationRepository abstraction, not concrete implementation
- * - Spring injects dependencies, we don't create them
  */
 @Service
 public class NotificationService {
 
     @Autowired
     private NotificationRepository notificationRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * Get all notifications (for staff view)
@@ -63,28 +53,39 @@ public class NotificationService {
 
     /**
      * Create a new notification (broadcast or user-specific)
-     * SRP: Validates and creates notification with timestamps
      */
     @Transactional
     public NotificationDTO createNotification(NotificationDTO notificationDTO) {
         // Validation
-        if (notificationDTO.getTitle() == null || notificationDTO.getTitle().trim().isEmpty()) {
-            throw new IllegalArgumentException("Notification title cannot be empty");
-        }
         if (notificationDTO.getMessage() == null || notificationDTO.getMessage().trim().isEmpty()) {
             throw new IllegalArgumentException("Notification message cannot be empty");
         }
 
+        String type = notificationDTO.getType();
+        if (type == null || type.trim().isEmpty()) {
+            type = "GENERAL";
+        }
+
+        String title = notificationDTO.getTitle();
+        if (title == null || title.trim().isEmpty()) {
+            title = type.substring(0, 1).toUpperCase() + type.substring(1).toLowerCase().replace('_', ' ') + " Notification";
+        }
+
+        User user = null;
+        if (notificationDTO.getUserId() != null) {
+            user = userRepository.findById(notificationDTO.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + notificationDTO.getUserId()));
+        }
+
         Notification notification = Notification.builder()
-                .title(notificationDTO.getTitle().trim())
+                .title(title.trim())
                 .message(notificationDTO.getMessage().trim())
+                .type(type)
+                .user(user)
                 .isRead(false)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
-
-        // Note: user is null for broadcast notifications
-        // If user-specific, would need to fetch user from repository
 
         Notification savedNotification = notificationRepository.save(notification);
         return convertToDTO(savedNotification);
@@ -92,7 +93,6 @@ public class NotificationService {
 
     /**
      * Update an existing notification
-     * SRP: Validates and updates notification with new timestamp
      */
     @Transactional
     public NotificationDTO updateNotification(Long notificationId, NotificationDTO notificationDTO) {
@@ -105,6 +105,16 @@ public class NotificationService {
         }
         if (notificationDTO.getMessage() != null && !notificationDTO.getMessage().trim().isEmpty()) {
             notification.setMessage(notificationDTO.getMessage().trim());
+        }
+        if (notificationDTO.getType() != null && !notificationDTO.getType().trim().isEmpty()) {
+            notification.setType(notificationDTO.getType().trim());
+        }
+        if (notificationDTO.getUserId() != null) {
+            User user = userRepository.findById(notificationDTO.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found with ID: " + notificationDTO.getUserId()));
+            notification.setUser(user);
+        } else if (notificationDTO.getIsBroadcast() != null && notificationDTO.getIsBroadcast()) {
+            notification.setUser(null);
         }
 
         notification.setUpdatedAt(LocalDateTime.now());
@@ -125,6 +135,33 @@ public class NotificationService {
     }
 
     /**
+     * Mark a notification as read
+     */
+    @Transactional
+    public void markAsRead(Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Notification not found with ID: " + notificationId));
+        notification.setIsRead(true);
+        notification.setUpdatedAt(LocalDateTime.now());
+        notificationRepository.save(notification);
+    }
+
+    /**
+     * Mark all notifications as read
+     */
+    @Transactional
+    public void markAllAsRead() {
+        List<Notification> notifications = notificationRepository.findAll();
+        for (Notification notification : notifications) {
+            if (!notification.getIsRead()) {
+                notification.setIsRead(true);
+                notification.setUpdatedAt(LocalDateTime.now());
+            }
+        }
+        notificationRepository.saveAll(notifications);
+    }
+
+    /**
      * Convert Notification entity to DTO
      */
     private NotificationDTO convertToDTO(Notification notification) {
@@ -134,6 +171,7 @@ public class NotificationService {
                 .userName(notification.getUser() != null ? notification.getUser().getUsername() : null)
                 .title(notification.getTitle())
                 .message(notification.getMessage())
+                .type(notification.getType())
                 .isRead(notification.getIsRead())
                 .createdAt(notification.getCreatedAt())
                 .updatedAt(notification.getUpdatedAt())

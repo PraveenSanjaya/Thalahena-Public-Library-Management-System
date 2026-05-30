@@ -1,5 +1,6 @@
 package com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ public class Feedback {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({"password", "otp", "role", "firstName", "lastName", "birthDate", "gender", "membershipDate", "whatsapp", "socialMedia", "phone", "active", "hibernateLazyInitializer", "handler"})
     private User user;
 
     @Column(columnDefinition = "TEXT")

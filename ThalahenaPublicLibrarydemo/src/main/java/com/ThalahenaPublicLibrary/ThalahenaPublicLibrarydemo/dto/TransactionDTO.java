@@ -31,4 +31,5 @@ public class TransactionDTO {
     private Double fineAmount;
     private BookCondition bookCondition;
     private String conditionNotes;
+    private String memberId; // Added for UI display
 }

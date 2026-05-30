@@ -1,8 +1,13 @@
 package com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.service;
 
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.dto.ReservationDTO;
+import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.entity.Book;
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.entity.Reservation;
+import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.entity.ReservationStatus;
+import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.entity.User;
+import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.repository.BookRepository;
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.repository.ReservationRepository;
+import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,27 +17,18 @@ import java.util.stream.Collectors;
 
 /**
  * Reservation Service - Handles all business logic for reservation management
- * 
- * SRP (Single Responsibility Principle):
- * - This service ONLY handles reservation business logic
- * - Does NOT handle HTTP concerns (that's the controller's job)
- * - Does NOT handle database access directly (that's the repository's job)
- * - Single purpose: manage reservations and staff acknowledgment
- * 
- * OCP (Open/Closed Principle):
- * - Open for extension: Can add new reservation workflows
- * - Closed for modification: Existing methods won't need changes for new features
- * - Future: Can add reservation expiry, notifications, etc.
- * 
- * DIP (Dependency Inversion Principle):
- * - Depends on ReservationRepository abstraction, not concrete implementation
- * - Spring injects dependencies, we don't create them
  */
 @Service
 public class ReservationService {
 
     @Autowired
     private ReservationRepository reservationRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private BookRepository bookRepository;
 
     /**
      * Get all reservations (read-only view for staff)
@@ -46,8 +42,47 @@ public class ReservationService {
     }
 
     /**
+     * Get reservations for a specific user ID
+     */
+    public List<ReservationDTO> getReservationsByUserId(Long userId) {
+        List<Reservation> reservations = reservationRepository.findByUserIdWithDetails(userId);
+        return reservations.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Create a new reservation
+     */
+    @Transactional
+    public ReservationDTO createReservation(ReservationDTO reservationDTO) {
+        if (reservationDTO.getUserId() == null) {
+            throw new IllegalArgumentException("User ID cannot be empty");
+        }
+        if (reservationDTO.getBookId() == null) {
+            throw new IllegalArgumentException("Book ID cannot be empty");
+        }
+
+        User user = userRepository.findById(reservationDTO.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + reservationDTO.getUserId()));
+
+        Book book = bookRepository.findById(reservationDTO.getBookId())
+                .orElseThrow(() -> new RuntimeException("Book not found with ID: " + reservationDTO.getBookId()));
+
+        Reservation reservation = Reservation.builder()
+                .user(user)
+                .book(book)
+                .reservationDate(java.time.LocalDateTime.now())
+                .status(ReservationStatus.PENDING)
+                .processed(false)
+                .build();
+
+        Reservation savedReservation = reservationRepository.save(reservation);
+        return convertToDTO(savedReservation);
+    }
+
+    /**
      * Acknowledge/Process a reservation
-     * SRP: Updates processed flag to mark reservation as handled
      */
     @Transactional
     public ReservationDTO acknowledgeReservation(Long reservationId) {

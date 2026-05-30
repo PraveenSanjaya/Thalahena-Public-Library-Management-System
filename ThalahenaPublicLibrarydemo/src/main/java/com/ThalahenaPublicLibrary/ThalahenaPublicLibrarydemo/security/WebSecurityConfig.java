@@ -69,15 +69,14 @@ public class WebSecurityConfig {
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/api/users/**").hasRole("ADMIN")
                                 .requestMatchers("/api/staff/**").hasAnyRole("STAFF", "ADMIN")
-                                .requestMatchers("/api/books").authenticated() // All authenticated users can view books
-                                .requestMatchers("/api/books/**").hasAnyRole("STAFF", "ADMIN") // Only staff/admin can modify
+                                .requestMatchers("/api/books", "/api/books/**").authenticated() // All authenticated users can view books/details (writes are secured in controller)
                                 .requestMatchers("/api/authors").hasAnyRole("STAFF", "ADMIN")
                                 .requestMatchers("/api/authors/**").hasAnyRole("STAFF", "ADMIN")
                                 .requestMatchers("/api/transactions/**").hasAnyRole("STAFF", "ADMIN")
-                                .requestMatchers("/api/reservations/**").authenticated() // All authenticated users can reserve
+                                .requestMatchers("/api/reservations", "/api/reservations/**").authenticated() // All authenticated users can reserve/view reservations
                                 .requestMatchers("/api/fines/**").hasAnyRole("STAFF", "ADMIN")
-                                .requestMatchers("/api/feedback/**").authenticated()
-                                .requestMatchers("/api/about/**").authenticated()
+                                .requestMatchers("/api/feedback", "/api/feedback/**").authenticated()
+                                .requestMatchers("/api/about", "/api/about/**").authenticated()
                                 .requestMatchers("/api/notifications/**").hasAnyRole("STAFF", "ADMIN")
                                 .anyRequest().authenticated()
                 );

@@ -31,6 +31,7 @@ const BookManagement = () => {
     isbn: '',
     category: '',
     totalCopies: 1,
+    availableCopies: 1,
     publisher: '',
     dateReceived: '',
     description: ''
@@ -105,6 +106,7 @@ const BookManagement = () => {
       isbn: '',
       category: '',
       totalCopies: 1,
+      availableCopies: 1,
       publisher: '',
       dateReceived: '',
       description: ''
@@ -122,6 +124,7 @@ const BookManagement = () => {
       isbn: book.isbn || '',
       category: book.category || '',
       totalCopies: book.totalCopies || 1,
+      availableCopies: book.availableCopies || 0,
       publisher: book.publisher || '',
       dateReceived: book.dateReceived || '',
       description: book.description || ''
@@ -142,6 +145,7 @@ const BookManagement = () => {
       data.append('isbn', formData.isbn);
       data.append('category', formData.category);
       data.append('totalCopies', parseInt(formData.totalCopies));
+      data.append('availableCopies', parseInt(formData.availableCopies));
       data.append('publisher', formData.publisher);
       data.append('dateReceived', formData.dateReceived);
       data.append('description', formData.description);
@@ -573,6 +577,31 @@ const BookManagement = () => {
 
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                    Available Copies *
+                  </label>
+                  <input
+                    type="number"
+                    name="availableCopies"
+                    value={formData.availableCopies}
+                    onChange={handleInputChange}
+                    min="0"
+                    max={formData.totalCopies}
+                    required
+                    style={{ 
+                      width: '100%', 
+                      padding: '0.75rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid var(--border-color)',
+                      background: 'var(--bg-secondary)',
+                      color: 'var(--text-primary)'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
                     Publisher
                   </label>
                   <input
@@ -590,26 +619,26 @@ const BookManagement = () => {
                     }}
                   />
                 </div>
-              </div>
 
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
-                  Date Received
-                </label>
-                <input
-                  type="date"
-                  name="dateReceived"
-                  value={formData.dateReceived}
-                  onChange={handleInputChange}
-                  style={{ 
-                    width: '100%', 
-                    padding: '0.75rem',
-                    borderRadius: '0.5rem',
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--bg-secondary)',
-                    color: 'var(--text-primary)'
-                  }}
-                />
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                    Date Received
+                  </label>
+                  <input
+                    type="date"
+                    name="dateReceived"
+                    value={formData.dateReceived}
+                    onChange={handleInputChange}
+                    style={{ 
+                      width: '100%', 
+                      padding: '0.75rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid var(--border-color)',
+                      background: 'var(--bg-secondary)',
+                      color: 'var(--text-primary)'
+                    }}
+                  />
+                </div>
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>

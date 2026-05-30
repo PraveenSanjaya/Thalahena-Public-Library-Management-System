@@ -22,8 +22,7 @@ import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/api/staff/books")
-@PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+@RequestMapping({"/api/books", "/api/staff/books"})
 public class BookController {
     @Autowired
     BookRepository bookRepository;
@@ -63,12 +62,14 @@ public class BookController {
     }
 
     @PostMapping(consumes = {"multipart/form-data"})
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<BookDTO> createBook(
             @RequestParam("title") String title,
             @RequestParam("authorId") Long authorId,
             @RequestParam("isbn") String isbn,
             @RequestParam("category") String category,
             @RequestParam("totalCopies") int totalCopies,
+            @RequestParam(value = "availableCopies", required = false) Integer availableCopies,
             @RequestParam(value = "publisher", required = false) String publisher,
             @RequestParam(value = "dateReceived", required = false) String dateReceived,
             @RequestParam(value = "description", required = false) String description,
@@ -81,7 +82,13 @@ public class BookController {
         book.setPublisher(publisher);
         book.setDescription(description);
         book.setTotalCopies(totalCopies);
-        book.setAvailableCopies(totalCopies);
+        
+        // Use provided availableCopies or default to totalCopies
+        if (availableCopies != null) {
+            book.setAvailableCopies(availableCopies);
+        } else {
+            book.setAvailableCopies(totalCopies);
+        }
         
         if (dateReceived != null && !dateReceived.isEmpty()) {
             book.setDateReceived(java.time.LocalDate.parse(dateReceived));
@@ -103,6 +110,7 @@ public class BookController {
     }
 
     @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<?> updateBook(
             @PathVariable Long id,
             @RequestParam("title") String title,
@@ -110,6 +118,7 @@ public class BookController {
             @RequestParam("isbn") String isbn,
             @RequestParam("category") String category,
             @RequestParam("totalCopies") int totalCopies,
+            @RequestParam(value = "availableCopies", required = false) Integer availableCopies,
             @RequestParam(value = "publisher", required = false) String publisher,
             @RequestParam(value = "dateReceived", required = false) String dateReceived,
             @RequestParam(value = "description", required = false) String description,
@@ -125,10 +134,14 @@ public class BookController {
                         book.setDescription(description);
                         book.setTotalCopies(totalCopies);
                         
-                        // Adjust available copies based on difference
-                        int oldTotal = book.getTotalCopies();
-                        int diff = totalCopies - oldTotal;
-                        book.setAvailableCopies(Math.max(0, book.getAvailableCopies() + diff));
+                        // Update available copies if provided, otherwise adjust based on difference
+                        if (availableCopies != null) {
+                            book.setAvailableCopies(availableCopies);
+                        } else {
+                            int oldTotal = book.getTotalCopies();
+                            int diff = totalCopies - oldTotal;
+                            book.setAvailableCopies(Math.max(0, book.getAvailableCopies() + diff));
+                        }
                         
                         if (dateReceived != null && !dateReceived.isEmpty()) {
                             book.setDateReceived(java.time.LocalDate.parse(dateReceived));
@@ -158,6 +171,7 @@ public class BookController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<?> deleteBook(@PathVariable Long id) {
         return bookRepository.findById(id)
                 .map(book -> {
@@ -172,6 +186,7 @@ public class BookController {
     }
 
     @PostMapping("/{id}/cover")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<?> uploadCover(@PathVariable Long id, @RequestParam("file") MultipartFile file) throws IOException {
         Book book = bookRepository.findById(id).orElseThrow();
         

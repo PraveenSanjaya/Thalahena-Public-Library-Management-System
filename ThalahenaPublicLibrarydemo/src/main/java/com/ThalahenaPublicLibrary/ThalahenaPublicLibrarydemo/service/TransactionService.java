@@ -89,41 +89,52 @@ public class TransactionService {
     /**
      * Issue a book to a member
      * SRP: Validates, creates transaction, updates book quantity
+     * OCP: Can add new validation rules without modifying existing logic
+     * DIP: Depends on Repository abstractions, not concrete implementations
+     * 
+     * LIBRARY BUSINESS RULE ENFORCEMENT:
+     * - One member can borrow ONLY ONE book at a time
+     * - Active statuses: ISSUED, OVERDUE (prevent new borrow)
+     * - Inactive status: RETURNED (allows new borrow)
      */
     @Transactional
     public TransactionDTO issueBook(Long userId, Long bookId) {
-        // Find user and book
+        // Step 1: Verify member exists
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Member not found with ID: " + userId));
         
+        // Step 2: Verify book exists
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("Book not found with ID: " + bookId));
 
-        // Validation: Check book availability
+        // Step 3: Check available quantity > 0 (BUSINESS RULE 3)
         if (book.getAvailableCopies() <= 0) {
-            throw new IllegalStateException(
-                    "No copies available for book: " + book.getTitle() + 
-                    ". Total copies: " + book.getTotalCopies()
-            );
+            throw new IllegalStateException("Book is currently unavailable.");
         }
 
-        // Check if user already has this book issued
-        boolean hasActiveTransaction = transactionRepository.findByUser(user).stream()
-                .anyMatch(t -> t.getBook().getId().equals(bookId) && 
-                              (t.getStatus() == TransactionStatus.ISSUED || 
-                               t.getStatus() == TransactionStatus.OVERDUE));
+        // Step 4: STRICT VALIDATION - Check member has NO active borrowed/overdue book (BUSINESS RULE 1)
+        // A member can have ONLY ONE active borrowed book at a time (Library Policy)
+        // Optimized query: Directly fetch active transactions instead of loading all
+        List<Transaction> activeTransactions = transactionRepository.findActiveTransactionsByUser(user);
         
-        if (hasActiveTransaction) {
+        if (!activeTransactions.isEmpty()) {
+            // Get the active transaction details for better error message
+            Transaction activeTransaction = activeTransactions.get(0);
+            String activeBookTitle = activeTransaction.getBook().getTitle();
+            
             throw new IllegalStateException(
-                    "Member already has this book issued. Please return it first."
+                    "According to library borrowing rules, a member can borrow only one book at a time. " +
+                    "This member currently has '" + activeBookTitle + "' (Status: " + 
+                    activeTransaction.getStatus() + "). " +
+                    "Please return the currently borrowed book before borrowing another."
             );
         }
 
-        // Decrease available copies
+        // Step 5: Reduce available quantity by 1 (BUSINESS RULE 4)
         book.setAvailableCopies(book.getAvailableCopies() - 1);
         bookRepository.save(book);
 
-        // Create transaction
+        // Step 6: Create transaction
         Transaction transaction = Transaction.builder()
                 .user(user)
                 .book(book)
@@ -141,6 +152,8 @@ public class TransactionService {
     /**
      * Return a book
      * SRP: Updates transaction, calculates fine, increases book quantity
+     * OCP: Can add new return logic without modifying existing code
+     * DIP: Depends on FineCalculatorService abstraction
      */
     @Transactional
     public TransactionDTO returnBook(Long transactionId, LocalDate returnDate, 
@@ -160,19 +173,29 @@ public class TransactionService {
         transaction.setReturnDate(actualReturnDate);
         transaction.setStatus(TransactionStatus.RETURNED);
         
-        // Update book condition if provided
+        // Update book condition (mandatory)
         if (bookCondition != null) {
             transaction.setBookCondition(bookCondition);
+        } else {
+            throw new IllegalArgumentException("Book Condition is required");
         }
+        
+        // Update condition notes if provided
         if (conditionNotes != null && !conditionNotes.isEmpty()) {
             transaction.setConditionNotes(conditionNotes);
         }
 
-        // Calculate fine using FineCalculatorService
+        // Calculate fine using FineCalculatorService (ensures fine is never negative)
         double fineAmount = fineCalculatorService.calculateFine(
                 transaction.getDueDate(), 
                 actualReturnDate
         );
+        
+        // Validation: Fine must never be negative
+        if (fineAmount < 0) {
+            fineAmount = 0.0;
+        }
+        
         transaction.setFineAmount(fineAmount);
 
         // Increase available copies
@@ -181,6 +204,7 @@ public class TransactionService {
         bookRepository.save(book);
 
         // Create fine record (always, even if amount is 0)
+        // OCP: Fine entity can be extended with new statuses without modifying this code
         Fine fine = Fine.builder()
                 .transaction(transaction)
                 .amount(fineAmount)
@@ -212,6 +236,8 @@ public class TransactionService {
     /**
      * Update transaction status and/or book condition
      * Allows manual editing of status and condition fields
+     * 
+     * CRITICAL: This method must enforce the "one book per member" rule when changing status to ISSUED
      */
     @Transactional
     public TransactionDTO updateTransaction(Long transactionId, String status, 
@@ -223,6 +249,31 @@ public class TransactionService {
         if (status != null && !status.isEmpty()) {
             try {
                 TransactionStatus newStatus = TransactionStatus.valueOf(status.toUpperCase());
+                
+                // ENFORCE BUSINESS RULE: If changing to ISSUED, check if member already has active book
+                if (newStatus == TransactionStatus.ISSUED) {
+                    List<Transaction> activeTransactions = transactionRepository
+                            .findActiveTransactionsByUser(transaction.getUser());
+                    
+                    // Filter out current transaction (in case it's being re-issued)
+                    long otherActiveCount = activeTransactions.stream()
+                            .filter(t -> !t.getId().equals(transactionId))
+                            .count();
+                    
+                    if (otherActiveCount > 0) {
+                        Transaction otherActive = activeTransactions.stream()
+                                .filter(t -> !t.getId().equals(transactionId))
+                                .findFirst().get();
+                        
+                        throw new IllegalStateException(
+                                "Cannot issue this book. Member already has '" + 
+                                otherActive.getBook().getTitle() + "' (Status: " + 
+                                otherActive.getStatus() + "). " +
+                                "According to library rules, a member can borrow only one book at a time."
+                        );
+                    }
+                }
+                
                 transaction.setStatus(newStatus);
                 
                 // If status is changed to RETURNED, set return date to today if not already set
@@ -244,6 +295,9 @@ public class TransactionService {
                         bookRepository.save(book);
                     }
                 }
+            } catch (IllegalStateException e) {
+                // Re-throw business rule violations
+                throw e;
             } catch (IllegalArgumentException e) {
                 throw new RuntimeException("Invalid status: " + status);
             }
@@ -275,6 +329,7 @@ public class TransactionService {
         return TransactionDTO.builder()
                 .id(transaction.getId())
                 .userId(transaction.getUser().getId())
+                .memberId(transaction.getUser().getUsername()) // Using username as member ID
                 .memberName(transaction.getUser().getUsername())
                 .memberEmail(transaction.getUser().getEmail())
                 .bookId(transaction.getBook().getId())
