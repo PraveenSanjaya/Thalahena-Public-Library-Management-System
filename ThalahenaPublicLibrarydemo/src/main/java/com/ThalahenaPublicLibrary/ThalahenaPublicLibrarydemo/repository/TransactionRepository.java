@@ -48,4 +48,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     // Count transactions by book
     @Query("SELECT t.book.id, COUNT(t) FROM Transaction t GROUP BY t.book.id")
     List<Object[]> countTransactionsByBook();
+
+    Long countByUserId(Long userId);
+
+    @Query("SELECT COUNT(t) FROM Transaction t WHERE t.user.id = :userId AND t.status IN ('ISSUED', 'OVERDUE')")
+    Long countActiveTransactionsByUserId(@Param("userId") Long userId);
 }

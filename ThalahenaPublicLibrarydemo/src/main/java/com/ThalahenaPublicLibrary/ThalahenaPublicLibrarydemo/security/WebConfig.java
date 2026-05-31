@@ -19,6 +19,10 @@ public class WebConfig implements WebMvcConfigurer {
         // Expose uploads directory for static file access
         String uploadPath = uploadBasePath + "/uploads/books";
         registry.addResourceHandler("/uploads/books/**")
-                .addResourceLocations("file:/" + uploadPath + "/");
+                .addResourceLocations("file:/" + uploadPath + "/", "file:uploads/books/");
+
+        String profilePath = uploadBasePath + "/uploads/profiles";
+        registry.addResourceHandler("/uploads/profiles/**")
+                .addResourceLocations("file:/" + profilePath + "/", "file:uploads/profiles/");
     }
 }

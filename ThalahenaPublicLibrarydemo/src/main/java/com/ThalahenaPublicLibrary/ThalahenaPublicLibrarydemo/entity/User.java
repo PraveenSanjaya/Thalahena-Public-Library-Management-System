@@ -43,6 +43,76 @@ public class User {
     private String socialMedia;
     private String phone;
 
+    @Column(name = "created_at", updatable = false)
+    private java.time.LocalDateTime createdAt;
+
+    @Column(name = "last_login")
+    private java.time.LocalDateTime lastLogin;
+
+    @Column(name = "staff_id")
+    private String staffId;
+
+    private String department;
+    private String position;
+
+    @Column(name = "member_id")
+    private String memberId;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = java.time.LocalDateTime.now();
+        }
+    }
+
+    public java.time.LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(java.time.LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public java.time.LocalDateTime getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(java.time.LocalDateTime lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
+    public String getStaffId() {
+        return staffId;
+    }
+
+    public void setStaffId(String staffId) {
+        this.staffId = staffId;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public void setPosition(String position) {
+        this.position = position;
+    }
+
+    public String getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(String memberId) {
+        this.memberId = memberId;
+    }
+
     public User() {
     }
 

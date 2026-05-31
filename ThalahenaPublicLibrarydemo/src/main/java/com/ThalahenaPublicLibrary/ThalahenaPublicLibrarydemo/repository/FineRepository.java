@@ -21,4 +21,7 @@ public interface FineRepository extends JpaRepository<Fine, Long> {
     // Get all fines with transaction and user details
     @Query("SELECT f FROM Fine f JOIN f.transaction t JOIN t.user u")
     List<Fine> findAllWithDetails();
+
+    @Query("SELECT COALESCE(SUM(f.amount), 0) FROM Fine f WHERE f.transaction.user.id = :userId AND f.status = 'UNPAID'")
+    Double sumUnpaidFinesByUserId(@org.springframework.data.repository.query.Param("userId") Long userId);
 }
