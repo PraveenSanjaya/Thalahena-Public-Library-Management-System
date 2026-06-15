@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bookmark, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Bookmark, Clock, CheckCircle2, AlertCircle, XCircle, AlertTriangle } from 'lucide-react';
 import api from '../../services/api';
 import authService from '../../services/auth.service';
 
@@ -23,6 +23,40 @@ const Reservations = () => {
     }
   };
 
+  const isExpired = (res) => {
+    if (!res.expiryDate) return false;
+    return new Date(res.expiryDate) < new Date() && res.status === 'PENDING';
+  };
+
+  const getStaffActionLabel = (res) => {
+    if (isExpired(res)) return { label: 'Expired', icon: <AlertTriangle size={16} />, color: 'var(--danger, #dc3545)' };
+    switch (res.status) {
+      case 'APPROVED': return { label: 'Approved', icon: <CheckCircle2 size={16} />, color: 'var(--success)' };
+      case 'COMPLETED': return { label: 'Book Issued', icon: <CheckCircle2 size={16} />, color: 'var(--success)' };
+      case 'REJECTED': return { label: 'Rejected', icon: <XCircle size={16} />, color: 'var(--danger, #dc3545)' };
+      case 'CANCELLED': return { label: 'Cancelled', icon: <XCircle size={16} />, color: 'var(--text-muted)' };
+      case 'AVAILABLE': return { label: 'Available', icon: <CheckCircle2 size={16} />, color: 'var(--success)' };
+      case 'UNAVAILABLE': return { label: 'Unavailable', icon: <AlertCircle size={16} />, color: 'var(--warning)' };
+      default: return res.processed
+        ? { label: 'Acknowledged', icon: <CheckCircle2 size={16} />, color: 'var(--success)' }
+        : { label: 'Pending Review', icon: <Clock size={16} />, color: 'orange' };
+    }
+  };
+
+  const getStatusBadge = (res) => {
+    if (isExpired(res)) return { text: 'EXPIRED', className: 'badge-danger' };
+    const map = {
+      PENDING: { text: 'PENDING', className: 'badge-warning' },
+      APPROVED: { text: 'APPROVED', className: 'badge-success' },
+      COMPLETED: { text: 'COMPLETED', className: 'badge-success' },
+      REJECTED: { text: 'REJECTED', className: 'badge-danger' },
+      CANCELLED: { text: 'CANCELLED', className: 'badge-secondary' },
+      AVAILABLE: { text: 'AVAILABLE', className: 'badge-info' },
+      UNAVAILABLE: { text: 'UNAVAILABLE', className: 'badge-danger' }
+    };
+    return map[res.status] || { text: res.status || 'PENDING', className: 'badge-secondary' };
+  };
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
@@ -38,7 +72,9 @@ const Reservations = () => {
           <Bookmark className="text-primary" size={24} />
           My Reservations
         </h1>
-        <p style={{ color: 'var(--text-muted)' }}>Track the status of books you have reserved for borrowing.</p>
+        <p style={{ color: 'var(--text-muted)' }}>
+          Track the status of books you have reserved. Reservations expire after 3 days if not approved.
+        </p>
       </div>
 
       <div className="premium-card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -48,37 +84,41 @@ const Reservations = () => {
               <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}>
                 <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Book Title</th>
                 <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>ISBN</th>
-                <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Reservation Date</th>
+                <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Reserved</th>
+                <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Expires</th>
                 <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Staff Action</th>
                 <th style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>Status</th>
               </tr>
             </thead>
             <tbody>
-              {reservations.map((res) => (
-                <tr key={res.id} style={{ borderBottom: '1px solid var(--border-light)', transition: 'background-color 0.2s' }}>
-                  <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{res.bookTitle}</td>
-                  <td style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)' }}>{res.bookIsbn}</td>
-                  <td style={{ padding: '1rem 1.5rem' }}>
-                    {new Date(res.reservationDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                  </td>
-                  <td style={{ padding: '1rem 1.5rem' }}>
-                    {res.processed ? (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'var(--success)', fontSize: '0.85rem', fontWeight: 500 }}>
-                        <CheckCircle2 size={16} /> Acknowledged
+              {reservations.map((res) => {
+                const action = getStaffActionLabel(res);
+                const badge = getStatusBadge(res);
+                return (
+                  <tr key={res.id} style={{ borderBottom: '1px solid var(--border-light)', transition: 'background-color 0.2s' }}>
+                    <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>{res.bookTitle}</td>
+                    <td style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)' }}>{res.bookIsbn}</td>
+                    <td style={{ padding: '1rem 1.5rem' }}>
+                      {new Date(res.reservationDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </td>
+                    <td style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                      {res.expiryDate
+                        ? new Date(res.expiryDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit' })
+                        : '-'}
+                    </td>
+                    <td style={{ padding: '1rem 1.5rem' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: action.color, fontSize: '0.85rem', fontWeight: 500 }}>
+                        {action.icon} {action.label}
                       </span>
-                    ) : (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: 'orange', fontSize: '0.85rem', fontWeight: 500 }}>
-                        <Clock size={16} /> Pending Review
+                    </td>
+                    <td style={{ padding: '1rem 1.5rem' }}>
+                      <span className={`badge ${badge.className}`} style={{ fontSize: '0.75rem' }}>
+                        {badge.text}
                       </span>
-                    )}
-                  </td>
-                  <td style={{ padding: '1rem 1.5rem' }}>
-                    <span className={`badge ${res.processed ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '0.75rem' }}>
-                      {res.processed ? 'APPROVED' : 'PENDING'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         ) : (

@@ -31,6 +31,7 @@ const Sidebar = () => {
     { name: 'Dashboard', path: '/member', icon: <LayoutDashboard size={20} /> },
     { name: 'Book History', path: '/member/history', icon: <History size={20} /> },
     { name: 'My Reservations', path: '/member/reservations', icon: <BookmarkPlus size={20} /> },
+    { name: 'Notifications', path: '/member/notifications', icon: <Bell size={20} /> },
     { name: 'Feedback', path: '/feedback', icon: <MessageSquare size={20} /> },
     { name: 'Additional Service', path: '/member/additional-service', icon: <BookOpen size={20} /> },
     { name: 'About', path: '/about', icon: <FileText size={20} /> },
@@ -45,8 +46,8 @@ const Sidebar = () => {
   return (
     <div className="sidebar">
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem', paddingLeft: '0.5rem' }}>
-        <Library className="text-primary" size={32} />
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Thalahena</h2>
+        <Library className="text-primary" size={32} style={{ flexShrink: 0 }} />
+        <h2 style={{ fontSize: '1.05rem', fontWeight: 700, lineHeight: 1.2 }}>Thalahena Public Library</h2>
       </div>
 
       <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

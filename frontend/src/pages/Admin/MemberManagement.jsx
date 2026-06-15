@@ -202,6 +202,7 @@ const MemberManagement = () => {
                 <th style={tableHeaderStyle}>ID</th>
                 <th style={tableHeaderStyle}>First Name</th>
                 <th style={tableHeaderStyle}>Last Name</th>
+                <th style={tableHeaderStyle}>Username</th>
                 <th style={tableHeaderStyle}>Birth Date</th>
                 <th style={tableHeaderStyle}>Age</th>
                 <th style={tableHeaderStyle}>Gender</th>
@@ -220,6 +221,7 @@ const MemberManagement = () => {
                   <td style={tableCellStyle}>{member.id}</td>
                   <td style={tableCellStyle}>{member.firstName || '-'}</td>
                   <td style={tableCellStyle}>{member.lastName || '-'}</td>
+                  <td style={{ ...tableCellStyle, fontWeight: 600, color: 'var(--primary)' }}>{member.username || '-'}</td>
                   <td style={tableCellStyle}>{member.birthDate || '-'}</td>
                   <td style={tableCellStyle}>{calculateAge(member.birthDate)}</td>
                   <td style={tableCellStyle}>{member.gender || '-'}</td>
@@ -276,7 +278,14 @@ const MemberManagement = () => {
                     placeholder="Enter first name"
                     required
                     value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const currentLastName = formData.lastName;
+                      const suggestedUser = editingMember 
+                        ? formData.username 
+                        : `${val.trim().toLowerCase()}.${currentLastName.trim().toLowerCase()}`.replace(/\s+/g, '');
+                      setFormData({ ...formData, firstName: val, username: suggestedUser });
+                    }}
                     style={{ ...inputStyle, width: '100%' }}
                   />
                 </div>
@@ -287,7 +296,14 @@ const MemberManagement = () => {
                     placeholder="Enter last name"
                     required
                     value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const currentFirstName = formData.firstName;
+                      const suggestedUser = editingMember 
+                        ? formData.username 
+                        : `${currentFirstName.trim().toLowerCase()}.${val.trim().toLowerCase()}`.replace(/\s+/g, '');
+                      setFormData({ ...formData, lastName: val, username: suggestedUser });
+                    }}
                     style={{ ...inputStyle, width: '100%' }}
                   />
                 </div>

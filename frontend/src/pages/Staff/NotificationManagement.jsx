@@ -71,7 +71,11 @@ const NotificationManagement = () => {
   const handleSendNotification = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/notifications', formData);
+      const payload = {
+        ...formData,
+        userId: formData.userId ? Number(formData.userId) : null,
+      };
+      await api.post('/notifications', payload);
       setShowSendModal(false);
       fetchNotifications();
       setFormData({ userId: '', message: '', type: 'GENERAL' });
@@ -156,7 +160,7 @@ const NotificationManagement = () => {
                   </div>
                   <p style={{ lineHeight: 1.6, marginBottom: '0.75rem' }}>{notification.message}</p>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    <span>To: {notification.user?.username || 'All Users'}</span>
+                    <span>To: {notification.userName || 'All Users (Public)'}</span>
                     <span>{new Date(notification.createdAt).toLocaleString()}</span>
                   </div>
                 </div>
@@ -204,9 +208,8 @@ const NotificationManagement = () => {
                     value={formData.userId}
                     onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
                     style={selectStyle}
-                    required
                   >
-                    <option value="">Select user (leave empty for all)</option>
+                    <option value="">📢 Everyone (Public Broadcast)</option>
                     {users.map(user => (
                       <option key={user.id} value={user.id}>
                         {user.firstName} {user.lastName} ({user.username})

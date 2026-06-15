@@ -17,7 +17,7 @@ const CATEGORY_COLORS = {
   '500': '#92400E',  // Natural Science - Brown
   '600': '#EF4444',  // Technology - Red
   '700': '#1E3A8A',  // Arts - Dark Blue
-  '800': '#14B8A6',  // Literature - Teal
+  '800': '#EAB308',  // Literature - Yellow
   '900': '#84CC16',  // History/Geography - Light Green
 };
 

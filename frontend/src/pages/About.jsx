@@ -58,7 +58,7 @@ const About = () => {
             display: 'inline-block',
             marginBottom: '1rem'
           }}>
-            Welcome to Thalahena
+            Welcome to Thalahena Public Library
           </span>
           <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.75rem', lineHeight: 1.2 }}>
             Thalahena Public Library

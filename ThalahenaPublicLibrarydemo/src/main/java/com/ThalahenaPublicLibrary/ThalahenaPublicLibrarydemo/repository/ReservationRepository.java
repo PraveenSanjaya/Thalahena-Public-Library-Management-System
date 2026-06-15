@@ -5,6 +5,7 @@ import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.entity.ReservationS
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
@@ -28,4 +29,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     @Query("SELECT r FROM Reservation r JOIN r.user u JOIN r.book b WHERE u.id = :userId ORDER BY r.reservationDate DESC")
     List<Reservation> findByUserIdWithDetails(@org.springframework.data.repository.query.Param("userId") Long userId);
+    
+    /**
+     * Find expired reservations: status = PENDING and expiryDate has passed
+     * Used by scheduled expiry task to auto-cancel stale reservations
+     */
+    List<Reservation> findByStatusAndExpiryDateBefore(ReservationStatus status, LocalDateTime time);
 }

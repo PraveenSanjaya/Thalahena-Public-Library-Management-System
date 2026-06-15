@@ -8,6 +8,7 @@ import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.entity.User;
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.repository.BookRepository;
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.repository.ReservationRepository;
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.repository.UserRepository;
+import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.service.IssuanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,10 @@ import java.util.stream.Collectors;
 
 /**
  * Reservation Service - Handles all business logic for reservation management
+ * 
+ * SRP: This service ONLY handles reservation business logic
+ * OCP: New workflow actions (auto-issue, expiry) added without modifying existing methods
+ * DIP: Depends on repository and IssuanceService abstractions injected by Spring
  */
 @Service
 public class ReservationService {
@@ -24,11 +29,16 @@ public class ReservationService {
     @Autowired
     private ReservationRepository reservationRepository;
 
+
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private BookRepository bookRepository;
+
+    @Autowired
+    private IssuanceService issuanceService;
+
 
     /**
      * Get all reservations (read-only view for staff)
@@ -83,6 +93,7 @@ public class ReservationService {
 
     /**
      * Acknowledge/Process a reservation
+     * If status is APPROVED, auto-issues the book (creates borrow transaction)
      */
     @Transactional
     public ReservationDTO acknowledgeReservation(Long reservationId) {
@@ -97,6 +108,71 @@ public class ReservationService {
         // Mark as processed
         reservation.setProcessed(true);
         
+        // If reservation is already AVAILABLE, auto‑issue the book
+        if (reservation.getStatus() == ReservationStatus.AVAILABLE && issuanceService != null) {
+            issuanceService.issueBookForReservation(reservation);
+        }
+        
+        Reservation savedReservation = reservationRepository.save(reservation);
+        return convertToDTO(savedReservation);
+    }
+
+    /**
+     * Update reservation status (Approve / Reject / etc.)
+     * 
+     * Workflow rules:
+     * - Cannot modify a COMPLETED or CANCELLED reservation
+     * - If status is changed to APPROVED, auto-issue the book
+     * - If status is changed to REJECTED or CANCELLED, mark as processed
+     * 
+     * @param reservationId the reservation ID
+     * @param newStatusStr  the new status string
+     * @return updated ReservationDTO
+     */
+    @Transactional
+    public ReservationDTO updateStatus(Long reservationId, String newStatusStr) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new RuntimeException("Reservation not found: " + reservationId));
+
+        // Map UI-friendly status strings to enum values
+        ReservationStatus newStatus;
+        switch (newStatusStr.toUpperCase()) {
+            case "APPROVED":
+            case "AVAILABLE":
+                newStatus = ReservationStatus.AVAILABLE;
+                break;
+            case "REJECTED":
+            case "UNAVAILABLE":
+                newStatus = ReservationStatus.UNAVAILABLE;
+                break;
+            case "COMPLETED":
+                newStatus = ReservationStatus.COMPLETED;
+                break;
+            case "CANCELLED":
+                newStatus = ReservationStatus.CANCELLED;
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid status value: " + newStatusStr);
+        }
+
+        // Prevent modifying finished reservations
+        if (reservation.getStatus() == ReservationStatus.COMPLETED ||
+                reservation.getStatus() == ReservationStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot modify a finished reservation");
+        }
+
+        reservation.setStatus(newStatus);
+        // Auto‑issue when reservation becomes AVAILABLE
+        if (newStatus == ReservationStatus.AVAILABLE) {
+            if (issuanceService != null) {
+                issuanceService.issueBookForReservation(reservation);
+            }
+        }
+        
+        // Rejected/cancelled reservations are marked as processed so they won't appear in pending queue
+        if (newStatus == ReservationStatus.UNAVAILABLE || newStatus == ReservationStatus.CANCELLED) {
+            reservation.setProcessed(true);
+        }
         Reservation savedReservation = reservationRepository.save(reservation);
         return convertToDTO(savedReservation);
     }
@@ -123,6 +199,7 @@ public class ReservationService {
                 .bookTitle(reservation.getBook() != null ? reservation.getBook().getTitle() : null)
                 .bookIsbn(reservation.getBook() != null ? reservation.getBook().getIsbn() : null)
                 .reservationDate(reservation.getReservationDate())
+                .expiryDate(reservation.getExpiryDate())
                 .status(reservation.getStatus() != null ? reservation.getStatus().toString() : null)
                 .processed(reservation.getProcessed() != null ? reservation.getProcessed() : false)
                 .build();

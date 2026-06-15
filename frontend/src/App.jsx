@@ -22,6 +22,7 @@ import NotificationManagement from './pages/Staff/NotificationManagement';
 import BookHistory from './pages/Member/BookHistory';
 import Reservations from './pages/Member/Reservations';
 import Feedback from './pages/Member/Feedback';
+import MemberNotifications from './pages/Member/Notifications';
 import About from './pages/About';
 import AdditionalService from './pages/Member/AdditionalService';
 import authService from './services/auth.service';
@@ -173,6 +174,11 @@ function App() {
         <Route path="/member/additional-service" element={
           <ProtectedRoute allowedRoles={['MEMBER']}>
             <DashboardLayout><AdditionalService /></DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/member/notifications" element={
+          <ProtectedRoute allowedRoles={['MEMBER']}>
+            <DashboardLayout><MemberNotifications /></DashboardLayout>
           </ProtectedRoute>
         } />
 

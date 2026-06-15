@@ -24,6 +24,7 @@ public class ReservationDTO {
     private String bookTitle;
     private String bookIsbn;
     private LocalDateTime reservationDate;
+    private LocalDateTime expiryDate;
     private String status;
     private Boolean processed;
 }

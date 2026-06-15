@@ -2,6 +2,7 @@ package com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.controller;
 
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.dto.MessageResponse;
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.dto.ReservationDTO;
+import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.entity.ReservationStatus;
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.service.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Reservation Controller - Handles HTTP requests for reservation management
@@ -56,6 +58,7 @@ public class ReservationController {
     /**
      * PATCH /api/staff/reservations/{id}/acknowledge
      * Mark reservation as processed (acknowledged by staff)
+     * If status is APPROVED, auto-issues the book
      */
     @PatchMapping("/{id}/acknowledge")
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
@@ -72,6 +75,46 @@ public class ReservationController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new MessageResponse("Error acknowledging reservation: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * PATCH /api/staff/reservations/{id}/status
+     * Change reservation status (Approve / Reject / Available / Unavailable)
+     * 
+     * Payload: { "status": "APPROVED" | "REJECTED" | "AVAILABLE" | "UNAVAILABLE" }
+     * 
+     * Rules:
+     * - APPROVED triggers auto-issuing (creates borrow transaction)
+     * - REJECTED marks as processed without issuing
+     * - Cannot modify COMPLETED or CANCELLED reservations
+     */
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+    public ResponseEntity<?> changeReservationStatus(@PathVariable Long id,
+                                                      @RequestBody Map<String, String> payload) {
+        try {
+            String statusStr = payload.get("status");
+            if (statusStr == null || statusStr.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(new MessageResponse("Status field is required"));
+            }
+
+            // Pass the raw status string to the service, which handles validation and conversion
+            ReservationDTO updated = reservationService.updateStatus(id, statusStr);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Invalid status: " + e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse(e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error updating reservation status: " + e.getMessage()));
         }
     }
 
