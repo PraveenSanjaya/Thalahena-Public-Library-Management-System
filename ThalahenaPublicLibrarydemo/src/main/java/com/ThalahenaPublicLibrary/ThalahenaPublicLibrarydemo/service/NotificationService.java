@@ -43,6 +43,16 @@ public class NotificationService {
     }
 
     /**
+     * Get notifications for a specific member/user (user-specific + broadcast)
+     */
+    public List<NotificationDTO> getNotificationsForUser(Long userId) {
+        List<Notification> notifications = notificationRepository.findMemberNotifications(userId);
+        return notifications.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Get notification by ID
      */
     public NotificationDTO getNotificationById(Long notificationId) {
@@ -147,11 +157,41 @@ public class NotificationService {
     }
 
     /**
+     * Mark a notification as read (validated for a specific member)
+     */
+    @Transactional
+    public void markAsReadForUser(Long notificationId, Long userId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Notification not found with ID: " + notificationId));
+        if (notification.getUser() != null && !notification.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("Access denied: You cannot modify this notification");
+        }
+        notification.setIsRead(true);
+        notification.setUpdatedAt(LocalDateTime.now());
+        notificationRepository.save(notification);
+    }
+
+    /**
      * Mark all notifications as read
      */
     @Transactional
     public void markAllAsRead() {
         List<Notification> notifications = notificationRepository.findAll();
+        for (Notification notification : notifications) {
+            if (!notification.getIsRead()) {
+                notification.setIsRead(true);
+                notification.setUpdatedAt(LocalDateTime.now());
+            }
+        }
+        notificationRepository.saveAll(notifications);
+    }
+
+    /**
+     * Mark all notifications as read for a specific member
+     */
+    @Transactional
+    public void markAllAsReadForUser(Long userId) {
+        List<Notification> notifications = notificationRepository.findMemberNotifications(userId);
         for (Notification notification : notifications) {
             if (!notification.getIsRead()) {
                 notification.setIsRead(true);

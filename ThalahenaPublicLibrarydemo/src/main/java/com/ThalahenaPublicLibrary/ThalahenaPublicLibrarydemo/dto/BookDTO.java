@@ -30,6 +30,10 @@ public class BookDTO {
     private int totalCopies;
     private int availableCopies;
     private String coverImage;
+    private Integer pages;
+    private String deweyCode;
+    private String municipalRef;
+    private String libraryRef;
     
     // Lightweight author info to prevent circular references
     private AuthorInfo author;

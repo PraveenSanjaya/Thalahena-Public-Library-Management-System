@@ -105,6 +105,21 @@ public class MemberController {
                     return ResponseEntity.badRequest().body("Error: User is not a member!");
                 }
                 
+                // Validate username uniqueness if it changed
+                if (userDetails.getUsername() != null && !userDetails.getUsername().equals(user.getUsername())) {
+                    if (userRepository.existsByUsername(userDetails.getUsername())) {
+                        return ResponseEntity.badRequest().body("Error: Username is already taken!");
+                    }
+                    user.setUsername(userDetails.getUsername());
+                }
+                
+                // Validate email uniqueness if it changed
+                if (userDetails.getEmail() != null && !userDetails.getEmail().equals(user.getEmail())) {
+                    if (userRepository.existsByEmail(userDetails.getEmail())) {
+                        return ResponseEntity.badRequest().body("Error: Email is already in use!");
+                    }
+                }
+                
                 user.setFirstName(userDetails.getFirstName());
                 user.setLastName(userDetails.getLastName());
                 user.setEmail(userDetails.getEmail());

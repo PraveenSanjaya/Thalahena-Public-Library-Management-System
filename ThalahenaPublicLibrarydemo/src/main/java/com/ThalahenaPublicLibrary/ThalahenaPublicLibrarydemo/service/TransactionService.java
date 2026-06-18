@@ -87,6 +87,17 @@ public class TransactionService {
     }
 
     /**
+     * Get transaction history for a specific user
+     */
+    public List<TransactionDTO> getUserTransactionHistory(Long userId) {
+        updateOverdueTransactions();
+        List<Transaction> transactions = transactionRepository.findByUserIdOrderByIssueDateDesc(userId);
+        return transactions.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Issue a book to a member
      * SRP: Validates, creates transaction, updates book quantity
      * OCP: Can add new validation rules without modifying existing logic

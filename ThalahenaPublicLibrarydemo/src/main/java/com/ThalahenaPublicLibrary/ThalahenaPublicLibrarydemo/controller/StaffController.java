@@ -2,6 +2,7 @@ package com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.controller;
 
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.dto.BookBorrowCountDTO;
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.dto.CategoryCountDTO;
+import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.dto.MemberDTO;
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.dto.StaffStatsDTO;
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.entity.ReservationStatus;
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.entity.TransactionStatus;
@@ -12,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,17 +111,47 @@ public class StaffController {
     }
 
     @GetMapping("/members")
-    public ResponseEntity<List<User>> getAllMembers() {
-        return ResponseEntity.ok(userRepository.findAllMembers());
+    public ResponseEntity<List<MemberDTO>> getAllMembers() {
+        List<MemberDTO> members = userRepository.findAllMembers().stream()
+                .map(this::convertToMemberDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(members);
     }
 
     @GetMapping("/members/search")
-    public ResponseEntity<List<User>> searchMembers(@RequestParam("query") String query) {
-        return ResponseEntity.ok(userRepository.searchMembers(query));
+    public ResponseEntity<List<MemberDTO>> searchMembers(@RequestParam("query") String query) {
+        List<MemberDTO> members = userRepository.searchMembers(query).stream()
+                .map(this::convertToMemberDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(members);
     }
 
     @GetMapping("/members/{id}/borrow-history")
     public ResponseEntity<List<?>> getMemberBorrowHistory(@PathVariable("id") Long id) {
         return ResponseEntity.ok(transactionRepository.findByUserIdOrderByIssueDateDesc(id));
+    }
+
+    private MemberDTO convertToMemberDTO(User user) {
+        Integer age = null;
+        if (user.getBirthDate() != null) {
+            age = Period.between(user.getBirthDate(), LocalDate.now()).getYears();
+        }
+        return MemberDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .birthDate(user.getBirthDate())
+                .age(age)
+                .gender(user.getGender())
+                .role(user.getRole().name())
+                .membershipDate(user.getMembershipDate())
+                .whatsapp(user.getWhatsapp())
+                .socialMedia(user.getSocialMedia())
+                .phone(user.getPhone())
+                .profilePicture(user.getProfilePicture())
+                .isActive(user.isActive())
+                .build();
     }
 }

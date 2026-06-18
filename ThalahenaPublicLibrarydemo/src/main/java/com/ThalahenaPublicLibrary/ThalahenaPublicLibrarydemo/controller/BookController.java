@@ -73,6 +73,10 @@ public class BookController {
             @RequestParam(value = "publisher", required = false) String publisher,
             @RequestParam(value = "dateReceived", required = false) String dateReceived,
             @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "pages", required = false) Integer pages,
+            @RequestParam(value = "deweyCode", required = false) String deweyCode,
+            @RequestParam(value = "municipalRef", required = false) String municipalRef,
+            @RequestParam(value = "libraryRef", required = false) String libraryRef,
             @RequestParam(value = "file", required = false) MultipartFile file) throws IOException {
         
         Book book = new Book();
@@ -82,6 +86,10 @@ public class BookController {
         book.setPublisher(publisher);
         book.setDescription(description);
         book.setTotalCopies(totalCopies);
+        book.setPages(pages != null ? pages : 1);
+        book.setDeweyCode(deweyCode != null && !deweyCode.isEmpty() ? deweyCode : "000");
+        book.setMunicipalRef(municipalRef);
+        book.setLibraryRef(libraryRef);
         
         // Use provided availableCopies or default to totalCopies
         if (availableCopies != null) {
@@ -122,6 +130,10 @@ public class BookController {
             @RequestParam(value = "publisher", required = false) String publisher,
             @RequestParam(value = "dateReceived", required = false) String dateReceived,
             @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "pages", required = false) Integer pages,
+            @RequestParam(value = "deweyCode", required = false) String deweyCode,
+            @RequestParam(value = "municipalRef", required = false) String municipalRef,
+            @RequestParam(value = "libraryRef", required = false) String libraryRef,
             @RequestParam(value = "file", required = false) MultipartFile file) {
         
         return bookRepository.findById(id)
@@ -133,6 +145,10 @@ public class BookController {
                         book.setPublisher(publisher);
                         book.setDescription(description);
                         book.setTotalCopies(totalCopies);
+                        book.setPages(pages != null ? pages : 1);
+                        book.setDeweyCode(deweyCode != null && !deweyCode.isEmpty() ? deweyCode : "000");
+                        book.setMunicipalRef(municipalRef);
+                        book.setLibraryRef(libraryRef);
                         
                         // Update available copies if provided, otherwise adjust based on difference
                         if (availableCopies != null) {
@@ -255,6 +271,10 @@ public class BookController {
                 .totalCopies(book.getTotalCopies())
                 .availableCopies(book.getAvailableCopies())
                 .coverImage(book.getCoverImage())
+                .pages(book.getPages())
+                .deweyCode(book.getDeweyCode())
+                .municipalRef(book.getMunicipalRef())
+                .libraryRef(book.getLibraryRef())
                 .author(authorInfo)
                 .build();
     }

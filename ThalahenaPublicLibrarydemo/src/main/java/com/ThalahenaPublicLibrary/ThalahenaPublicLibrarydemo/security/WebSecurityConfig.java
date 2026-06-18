@@ -72,12 +72,13 @@ public class WebSecurityConfig {
                                 .requestMatchers("/api/books", "/api/books/**").authenticated() // All authenticated users can view books/details (writes are secured in controller)
                                 .requestMatchers("/api/authors").hasAnyRole("STAFF", "ADMIN")
                                 .requestMatchers("/api/authors/**").hasAnyRole("STAFF", "ADMIN")
+                                .requestMatchers("/api/transactions/user/**").authenticated() // All authenticated users can view own borrowing history
                                 .requestMatchers("/api/transactions/**").hasAnyRole("STAFF", "ADMIN")
                                 .requestMatchers("/api/reservations", "/api/reservations/**").authenticated() // All authenticated users can reserve/view reservations
                                 .requestMatchers("/api/fines/**").hasAnyRole("STAFF", "ADMIN")
                                 .requestMatchers("/api/feedback", "/api/feedback/**").authenticated()
                                 .requestMatchers("/api/about", "/api/about/**").authenticated()
-                                .requestMatchers("/api/notifications/**").hasAnyRole("STAFF", "ADMIN")
+                                .requestMatchers("/api/notifications", "/api/notifications/**").authenticated()
                                 .anyRequest().authenticated()
                 );
 

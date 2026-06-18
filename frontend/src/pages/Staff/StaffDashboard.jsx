@@ -47,8 +47,15 @@ const StaffDashboard = () => {
   }, []);
 
   // Prepare pie chart data
+  // Strip any leading code prefix (e.g. "000 Generality" → "Generality") to avoid redundancy
+  const cleanCategoryName = (name, code) => {
+    if (!name) return code;
+    const cleaned = name.replace(/^\d{3}\s*[-–]?\s*/, '').trim();
+    return cleaned || name;
+  };
+
   const categoryChartData = {
-    labels: stats.categoryCounts.map(cat => `${cat.code} - ${cat.category}`),
+    labels: stats.categoryCounts.map(cat => `${cat.code} - ${cleanCategoryName(cat.category, cat.code)}`),
     datasets: [
       {
         data: stats.categoryCounts.map(cat => cat.count),
@@ -123,13 +130,16 @@ const StaffDashboard = () => {
               <Pie 
                 data={categoryChartData} 
                 options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
                   plugins: {
                     legend: {
                       position: 'right',
                       labels: {
+                        boxWidth: 12,
                         padding: 15,
                         font: {
-                          size: 12
+                          size: 11
                         }
                       }
                     }

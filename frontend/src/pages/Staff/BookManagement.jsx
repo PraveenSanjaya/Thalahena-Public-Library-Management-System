@@ -34,7 +34,11 @@ const BookManagement = () => {
     availableCopies: 1,
     publisher: '',
     dateReceived: '',
-    description: ''
+    description: '',
+    pages: '',
+    deweyCode: '',
+    municipalRef: '',
+    libraryRef: ''
   });
 
   useEffect(() => {
@@ -109,7 +113,11 @@ const BookManagement = () => {
       availableCopies: 1,
       publisher: '',
       dateReceived: '',
-      description: ''
+      description: '',
+      pages: '',
+      deweyCode: '',
+      municipalRef: '',
+      libraryRef: ''
     });
     setCoverPreview(null);
     setCoverFile(null);
@@ -127,7 +135,11 @@ const BookManagement = () => {
       availableCopies: book.availableCopies || 0,
       publisher: book.publisher || '',
       dateReceived: book.dateReceived || '',
-      description: book.description || ''
+      description: book.description || '',
+      pages: book.pages || '',
+      deweyCode: book.deweyCode || '',
+      municipalRef: book.municipalRef || '',
+      libraryRef: book.libraryRef || ''
     });
     setCoverPreview(book.coverImage ? `http://localhost:8081${book.coverImage}` : null);
     setCoverFile(null);
@@ -149,6 +161,10 @@ const BookManagement = () => {
       data.append('publisher', formData.publisher);
       data.append('dateReceived', formData.dateReceived);
       data.append('description', formData.description);
+      data.append('pages', parseInt(formData.pages) || 1);
+      data.append('deweyCode', formData.deweyCode);
+      if (formData.municipalRef) data.append('municipalRef', formData.municipalRef);
+      if (formData.libraryRef) data.append('libraryRef', formData.libraryRef);
       
       if (coverFile) {
         data.append('file', coverFile);
@@ -284,11 +300,35 @@ const BookManagement = () => {
                       {book.category}
                     </span>
                   )}
+                  {book.deweyCode && (
+                    <span className="badge" style={{ fontSize: '0.75rem', background: 'rgba(139,92,246,0.15)', color: '#a78bfa' }}>
+                      DDC: {book.deweyCode}
+                    </span>
+                  )}
                 </div>
                 {book.publisher && (
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.5rem' }}>
                     Publisher: {book.publisher}
                   </p>
+                )}
+                {book.pages && (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.1rem' }}>
+                    Pages: {book.pages}
+                  </p>
+                )}
+                {(book.municipalRef || book.libraryRef) && (
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.4rem', flexWrap: 'wrap' }}>
+                    {book.municipalRef && (
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
+                        Municipal Ref: {book.municipalRef}
+                      </span>
+                    )}
+                    {book.libraryRef && (
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
+                        Library Ref: {book.libraryRef}
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
@@ -660,6 +700,100 @@ const BookManagement = () => {
                     resize: 'vertical'
                   }}
                 />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                    Pages *
+                  </label>
+                  <input
+                    type="number"
+                    name="pages"
+                    value={formData.pages}
+                    onChange={handleInputChange}
+                    min="1"
+                    required
+                    placeholder="e.g. 320"
+                    style={{ 
+                      width: '100%', 
+                      padding: '0.75rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid var(--border-color)',
+                      background: 'var(--bg-secondary)',
+                      color: 'var(--text-primary)'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                    Dewey Code *
+                  </label>
+                  <input
+                    type="text"
+                    name="deweyCode"
+                    value={formData.deweyCode}
+                    onChange={handleInputChange}
+                    required
+                    maxLength={20}
+                    placeholder="e.g. 001"
+                    style={{ 
+                      width: '100%', 
+                      padding: '0.75rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid var(--border-color)',
+                      background: 'var(--bg-secondary)',
+                      color: 'var(--text-primary)'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                    Municipal Council Ref
+                  </label>
+                  <input
+                    type="text"
+                    name="municipalRef"
+                    value={formData.municipalRef}
+                    onChange={handleInputChange}
+                    maxLength={20}
+                    placeholder="Negombo Municipal Council ref (e.g. 99626)"
+                    style={{ 
+                      width: '100%', 
+                      padding: '0.75rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid var(--border-color)',
+                      background: 'var(--bg-secondary)',
+                      color: 'var(--text-primary)'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                    Library Ref
+                  </label>
+                  <input
+                    type="text"
+                    name="libraryRef"
+                    value={formData.libraryRef}
+                    onChange={handleInputChange}
+                    maxLength={20}
+                    placeholder="Talahena Public Library ref (e.g. 8269)"
+                    style={{ 
+                      width: '100%', 
+                      padding: '0.75rem',
+                      borderRadius: '0.5rem',
+                      border: '1px solid var(--border-color)',
+                      background: 'var(--bg-secondary)',
+                      color: 'var(--text-primary)'
+                    }}
+                  />
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>

@@ -218,9 +218,19 @@ input:focus, select:focus, textarea:focus {
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.875rem;
+  font-weight: 600;
+  display: inline-block;
 }
 
 .badge-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
 .badge-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
 .badge-info { background: rgba(99, 102, 241, 0.1); color: var(--primary); }
 .badge-secondary { background: rgba(100, 116, 139, 0.1); color: var(--text-muted); }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
+}

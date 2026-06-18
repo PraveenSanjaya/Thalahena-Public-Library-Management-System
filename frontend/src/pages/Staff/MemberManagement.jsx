@@ -120,7 +120,7 @@ const StaffMemberManagement = () => {
                     <span style={{
                       padding: '0.25rem 0.75rem',
                       borderRadius: '0.25rem',
-                      background: member.isActive ? 'var(--success)' : 'var(--text-muted)',
+                      background: member.isActive ? '#10b981' : '#f43f5e',
                       color: 'white',
                       fontSize: '0.75rem',
                       fontWeight: 600

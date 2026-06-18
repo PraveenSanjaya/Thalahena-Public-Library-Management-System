@@ -23,8 +23,7 @@ import java.util.Map;
  */
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/api/staff/transactions")
-@PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
+@RequestMapping({"/api/staff/transactions", "/api/transactions"})
 public class TransactionController {
     
     @Autowired
@@ -35,6 +34,7 @@ public class TransactionController {
      * Get transactions with optional status filter
      */
     @GetMapping
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<List<TransactionDTO>> getAllTransactions(
             @RequestParam(required = false) String status) {
         List<TransactionDTO> transactions = transactionService.getTransactions(status);
@@ -46,6 +46,7 @@ public class TransactionController {
      * Get transaction counters for dashboard cards
      */
     @GetMapping("/counters")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<?> getCounters() {
         TransactionService.TransactionCountersDTO counters = transactionService.getCounters();
         return ResponseEntity.ok(counters);
@@ -56,6 +57,7 @@ public class TransactionController {
      * Issue a book to a member
      */
     @PostMapping("/issue")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<?> issueBook(
             @RequestParam Long userId,
             @RequestParam Long bookId) {
@@ -80,6 +82,7 @@ public class TransactionController {
      * SRP: Only handles HTTP request/response, delegates to TransactionService
      */
     @PutMapping("/return/{issueId}")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<?> returnBook(
             @PathVariable Long issueId,
             @RequestParam(required = false) LocalDate returnDate,
@@ -124,6 +127,7 @@ public class TransactionController {
      * Update transaction status and/or book condition
      */
     @PutMapping("/{id}/update")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
     public ResponseEntity<?> updateTransaction(
             @PathVariable Long id,
             @RequestParam(required = false) String status,
@@ -139,6 +143,24 @@ public class TransactionController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new MessageResponse("Error updating transaction: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/transactions/user/{userId}
+     * Get transaction history for a specific user
+     * STAFF/ADMIN can view any user's history.
+     * MEMBER can only view their own history (SpEL: #userId == principal.id).
+     */
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN') or (hasRole('MEMBER') and #userId == principal.id)")
+    public ResponseEntity<?> getUserTransactionHistory(@PathVariable Long userId) {
+        try {
+            List<TransactionDTO> history = transactionService.getUserTransactionHistory(userId);
+            return ResponseEntity.ok(history);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error fetching transaction history: " + e.getMessage()));
         }
     }
 }

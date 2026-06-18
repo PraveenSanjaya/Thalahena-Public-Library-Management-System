@@ -565,14 +565,14 @@ const Profile = () => {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>Social Media Link</label>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>Home Address</label>
                   <input
                     type="text"
                     name="socialMedia"
                     value={formData.socialMedia}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    placeholder="Social Media Profile Link"
+                    placeholder="Enter your home address"
                     style={{ background: !isEditing ? 'var(--bg-secondary)' : '#fff' }}
                   />
                 </div>

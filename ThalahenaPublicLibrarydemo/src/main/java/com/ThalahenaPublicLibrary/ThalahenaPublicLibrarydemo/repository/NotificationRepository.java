@@ -26,4 +26,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     // Search by title or message
     @Query("SELECT n FROM Notification n WHERE LOWER(n.title) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(n.message) LIKE LOWER(CONCAT('%', :search, '%')) ORDER BY n.createdAt DESC")
     List<Notification> searchByTitleOrMessage(String search);
+
+    // Fetch member-specific + broadcast notifications
+    @Query("SELECT n FROM Notification n WHERE n.user IS NULL OR n.user.id = :userId ORDER BY n.createdAt DESC")
+    List<Notification> findMemberNotifications(@org.springframework.data.repository.query.Param("userId") Long userId);
 }

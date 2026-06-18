@@ -93,10 +93,10 @@ const Login = () => {
           </button>
         </form>
 
-        <div style={{ marginTop: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-          <p>Admin: admin1 / admin123</p>
-          <p>Staff: staff1 / staff123</p>
-          <p>Member: user1 / user123</p>
+        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+          <p style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+            Unlock a world of knowledge — log in to begin your journey.
+          </p>
         </div>
       </motion.div>
       <OtpLoginModal isOpen={isOtpModalOpen} onClose={() => setIsOtpModalOpen(false)} />

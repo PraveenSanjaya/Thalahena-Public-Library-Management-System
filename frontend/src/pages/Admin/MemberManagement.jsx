@@ -105,9 +105,12 @@ const MemberManagement = () => {
     e.preventDefault();
     try {
       // Transform formData to match backend User entity structure
+      // Convert empty strings to null for date fields (Jackson can't deserialize '' into LocalDate)
       const memberData = {
         ...formData,
-        active: formData.active
+        active: formData.active,
+        birthDate: formData.birthDate || null,
+        membershipDate: formData.membershipDate || null,
       };
       
       console.log('Sending member data:', memberData);
@@ -209,7 +212,7 @@ const MemberManagement = () => {
                 <th style={tableHeaderStyle}>Email</th>
                 <th style={tableHeaderStyle}>WhatsApp</th>
                 <th style={tableHeaderStyle}>Phone</th>
-                <th style={tableHeaderStyle}>Social Media</th>
+                <th style={tableHeaderStyle}>Home Address</th>
                 <th style={tableHeaderStyle}>Status</th>
                 <th style={tableHeaderStyle}>Membership Date</th>
                 <th style={tableHeaderStyle}>Actions</th>
@@ -405,10 +408,10 @@ const MemberManagement = () => {
                   />
                 </div>
                 <div style={formGroupStyle}>
-                  <label style={labelStyle}>Social Media</label>
+                  <label style={labelStyle}>Home Address</label>
                   <input
                     type="text"
-                    placeholder="Enter social media link"
+                    placeholder="Enter home address"
                     value={formData.socialMedia}
                     onChange={(e) => setFormData({ ...formData, socialMedia: e.target.value })}
                     style={{ ...inputStyle, width: '100%' }}
