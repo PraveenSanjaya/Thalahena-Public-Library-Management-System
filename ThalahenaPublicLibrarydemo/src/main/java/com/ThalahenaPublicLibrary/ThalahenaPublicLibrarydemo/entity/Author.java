@@ -1,34 +1,20 @@
 package com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 /**
  * SOLID Principles Applied:
- * 
- * SRP (Single Responsibility Principle):
- * - This entity is only responsible for representing an Author
- * - Book relationships are managed by the Book entity, not here
- * 
- * OCP (Open/Closed Principle):
- * - Entity can be extended with new fields without modifying existing code
- * - Example: Adding biography, nationality fields doesn't break existing functionality
- * 
- * DIP (Dependency Inversion Principle):
- * - Depends on JPA abstraction (Jakarta Persistence), not concrete database implementation
+ * SRP: Only represents Author data.
+ * OCP: Extensible with new fields without breaking existing code.
+ * DIP: Depends on JPA abstraction (Jakarta Persistence).
  */
 @Entity
 @Table(name = "authors", indexes = {
     @Index(name = "idx_author_name", columnList = "name")
 })
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Author {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,11 +25,48 @@ public class Author {
 
     @Column(columnDefinition = "TEXT")
     private String bio;
-    
-    // One author can write many books
-    // mappedBy indicates that Book entity owns the relationship
+
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
     @JsonIgnoreProperties("author")
     private List<Book> books = new ArrayList<>();
+
+    // ── Constructors ─────────────────────────────────────────────────────────
+    public Author() {}
+
+    public Author(Long id, String name, String bio, List<Book> books) {
+        this.id = id; this.name = name; this.bio = bio;
+        this.books = books != null ? books : new ArrayList<>();
+    }
+
+    // ── Builder ──────────────────────────────────────────────────────────────
+    public static AuthorBuilder builder() { return new AuthorBuilder(); }
+
+    public static class AuthorBuilder {
+        private Long id;
+        private String name;
+        private String bio;
+        private List<Book> books = new ArrayList<>();
+
+        public AuthorBuilder id(Long id)             { this.id = id; return this; }
+        public AuthorBuilder name(String name)       { this.name = name; return this; }
+        public AuthorBuilder bio(String bio)         { this.bio = bio; return this; }
+        public AuthorBuilder books(List<Book> books) { this.books = books; return this; }
+
+        public Author build() {
+            Author a = new Author();
+            a.id = this.id; a.name = this.name; a.bio = this.bio;
+            a.books = this.books != null ? this.books : new ArrayList<>();
+            return a;
+        }
+    }
+
+    // ── Getters & Setters ────────────────────────────────────────────────────
+    public Long getId()                 { return id; }
+    public void setId(Long id)         { this.id = id; }
+    public String getName()             { return name; }
+    public void setName(String name)   { this.name = name; }
+    public String getBio()              { return bio; }
+    public void setBio(String bio)     { this.bio = bio; }
+    public List<Book> getBooks()        { return books; }
+    public void setBooks(List<Book> b) { this.books = b; }
 }
