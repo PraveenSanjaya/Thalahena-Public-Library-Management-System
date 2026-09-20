@@ -7,6 +7,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface BookRepository extends JpaRepository<Book, Long> {
+    // Duplicate ISBN check
+    boolean existsByIsbn(String isbn);
+
     // Search books
     @Query("SELECT b FROM Book b WHERE " +
            "LOWER(b.title) LIKE LOWER(CONCAT('%', :search, '%')) OR " +

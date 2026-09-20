@@ -8,6 +8,7 @@ const MemberManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -103,6 +104,9 @@ const MemberManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
+
+    setSubmitting(true);
     try {
       // Transform formData to match backend User entity structure
       // Convert empty strings to null for date fields (Jackson can't deserialize '' into LocalDate)
@@ -112,9 +116,9 @@ const MemberManagement = () => {
         birthDate: formData.birthDate || null,
         membershipDate: formData.membershipDate || null,
       };
-      
+
       console.log('Sending member data:', memberData);
-      
+
       if (editingMember) {
         await api.put(`/admin/members/${editingMember.id}`, memberData);
       } else {
@@ -125,6 +129,8 @@ const MemberManagement = () => {
     } catch (error) {
       console.error('Error saving member:', error);
       alert('Error saving member: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -419,8 +425,8 @@ const MemberManagement = () => {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                <button type="submit" className="btn btn-primary">
-                  {editingMember ? 'Update' : 'Create'}
+                <button type="submit" className="btn btn-primary" disabled={submitting}>
+                  {submitting ? 'Saving...' : (editingMember ? 'Update' : 'Create')}
                 </button>
                 <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary">
                   Cancel
