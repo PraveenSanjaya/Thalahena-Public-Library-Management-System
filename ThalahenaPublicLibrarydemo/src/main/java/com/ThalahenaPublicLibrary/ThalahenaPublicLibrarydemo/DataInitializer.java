@@ -7,12 +7,19 @@ import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.repository.AboutRep
 import com.ThalahenaPublicLibrary.ThalahenaPublicLibrarydemo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
+/**
+ * Seeds default admin/staff/member accounts on startup.
+ * Disabled under the "test" profile so automated tests never reset seed-account
+ * passwords or touch the shared development database (see application-test.properties).
+ */
 @Component
+@Profile("!test")
 public class DataInitializer implements CommandLineRunner {
 
     @Autowired

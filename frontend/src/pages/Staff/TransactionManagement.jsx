@@ -177,8 +177,9 @@ const TransactionManagement = () => {
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Circulation Management</h1>
           <p style={{ color: 'var(--text-muted)' }}>Issue and return books</p>
         </div>
-        <button 
-          className="btn-primary" 
+        <button
+          className="btn-primary"
+          data-testid="issue-book-btn"
           style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
           onClick={() => setShowIssueModal(true)}
         >
@@ -279,10 +280,11 @@ const TransactionManagement = () => {
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'right' }}>
                   {(t.status?.toUpperCase() === 'ISSUED' || t.status?.toUpperCase() === 'OVERDUE') && (
-                    <button 
+                    <button
                       onClick={() => openReturnModal(t)}
                       disabled={loading}
-                      style={{ 
+                      data-testid={`return-btn-${t.id}`}
+                      style={{
                         display: 'flex', 
                         alignItems: 'center', 
                         gap: '0.25rem', 
@@ -335,7 +337,8 @@ const TransactionManagement = () => {
                   value={issueData.userId}
                   onChange={(e) => setIssueData({ ...issueData, userId: e.target.value })}
                   required
-                  style={{ 
+                  data-testid="issue-member-select"
+                  style={{
                     width: '100%', 
                     padding: '0.75rem',
                     borderRadius: '0.5rem',
@@ -357,7 +360,8 @@ const TransactionManagement = () => {
                   value={issueData.bookId}
                   onChange={(e) => setIssueData({ ...issueData, bookId: e.target.value })}
                   required
-                  style={{ 
+                  data-testid="issue-book-select"
+                  style={{
                     width: '100%', 
                     padding: '0.75rem',
                     borderRadius: '0.5rem',
@@ -379,7 +383,7 @@ const TransactionManagement = () => {
                 <button type="button" className="btn-secondary" onClick={() => setShowIssueModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary" disabled={loading}>
+                <button type="submit" className="btn-primary" data-testid="issue-submit" disabled={loading}>
                   {loading ? 'Issuing...' : 'Issue Book'}
                 </button>
               </div>
@@ -521,7 +525,7 @@ const TransactionManagement = () => {
                 <button type="button" className="btn-secondary" onClick={() => setShowReturnModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary" disabled={loading}>
+                <button type="submit" className="btn-primary" data-testid="return-submit" disabled={loading}>
                   {loading ? 'Processing...' : 'Return Book'}
                 </button>
               </div>

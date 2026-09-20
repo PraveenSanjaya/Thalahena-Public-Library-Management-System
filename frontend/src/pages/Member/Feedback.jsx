@@ -9,7 +9,8 @@ const Feedback = () => {
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
   const [loading, setLoading] = useState(true);
-  
+  const [submitting, setSubmitting] = useState(false);
+
   const currentUser = authService.getCurrentUser();
   const isMember = currentUser?.role === 'MEMBER';
   const isStaffOrAdmin = currentUser?.role === 'STAFF' || currentUser?.role === 'ADMIN';
@@ -31,8 +32,9 @@ const Feedback = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!message.trim()) return;
+    if (!message.trim() || submitting) return;
 
+    setSubmitting(true);
     try {
       await api.post('/feedback', { message });
       setMessage('');
@@ -41,6 +43,8 @@ const Feedback = () => {
     } catch (error) {
       console.error('Error submitting feedback:', error);
       alert('Failed to submit feedback');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -51,8 +55,9 @@ const Feedback = () => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    if (!editText.trim()) return;
+    if (!editText.trim() || submitting) return;
 
+    setSubmitting(true);
     try {
       await api.put(`/feedback/${editingId}`, { message: editText });
       setEditingId(null);
@@ -62,6 +67,8 @@ const Feedback = () => {
     } catch (error) {
       console.error('Error updating feedback:', error);
       alert('Failed to update feedback');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -124,8 +131,8 @@ const Feedback = () => {
                     style={{ resize: 'none', fontSize: '0.875rem' }}
                   />
                 </div>
-                <button type="submit" className="btn-primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                  Send Feedback
+                <button type="submit" className="btn-primary" disabled={submitting} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                  {submitting ? 'Sending...' : 'Send Feedback'}
                   <Send size={14} />
                 </button>
               </form>
@@ -154,7 +161,7 @@ const Feedback = () => {
                       style={{ fontSize: '0.875rem', resize: 'none' }}
                     />
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button type="submit" className="btn btn-sm btn-primary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}>Save</button>
+                      <button type="submit" disabled={submitting} className="btn btn-sm btn-primary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}>{submitting ? 'Saving...' : 'Save'}</button>
                       <button type="button" onClick={() => setEditingId(null)} className="btn btn-sm btn-secondary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}>Cancel</button>
                     </div>
                   </form>

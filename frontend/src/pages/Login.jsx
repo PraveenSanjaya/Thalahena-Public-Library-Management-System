@@ -63,6 +63,7 @@ const Login = () => {
               {...register('username', { required: 'Username is required' })}
               type="text"
               placeholder="Username"
+              data-testid="login-username"
               style={{ paddingLeft: '2.75rem' }}
             />
             {errors.username && <p style={{ color: 'var(--danger)', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.username.message}</p>}
@@ -74,6 +75,7 @@ const Login = () => {
               {...register('password', { required: 'Password is required' })}
               type="password"
               placeholder="Password"
+              data-testid="login-password"
               style={{ paddingLeft: '2.75rem' }}
             />
             {errors.password && <p style={{ color: 'var(--danger)', fontSize: '0.75rem', marginTop: '0.25rem' }}>{errors.password.message}</p>}
@@ -88,7 +90,7 @@ const Login = () => {
             </span>
           </div>
 
-          <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: '0.5rem' }}>
+          <button type="submit" data-testid="login-submit" className="btn-primary" disabled={loading} style={{ marginTop: '0.5rem' }}>
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>

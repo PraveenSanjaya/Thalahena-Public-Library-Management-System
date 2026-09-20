@@ -9,6 +9,7 @@ const FineManagement = () => {
   const [loading, setLoading] = useState(true);
   const [editingFine, setEditingFine] = useState(null);
   const [editData, setEditData] = useState({ paymentDate: '', status: '' });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchFines();
@@ -49,7 +50,9 @@ const FineManagement = () => {
 
   const handleUpdateFine = async (e) => {
     e.preventDefault();
-    
+    if (submitting) return;
+
+    setSubmitting(true);
     try {
       await api.put(`/staff/fines/${editingFine.id}`, null, {
         params: {
@@ -65,6 +68,8 @@ const FineManagement = () => {
       console.error('Error updating fine:', error);
       const message = error.response?.data?.message || 'Error updating fine';
       alert(message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -348,8 +353,8 @@ const FineManagement = () => {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary">
-                  Update Fine
+                <button type="submit" className="btn-primary" disabled={submitting}>
+                  {submitting ? 'Updating...' : 'Update Fine'}
                 </button>
               </div>
             </form>

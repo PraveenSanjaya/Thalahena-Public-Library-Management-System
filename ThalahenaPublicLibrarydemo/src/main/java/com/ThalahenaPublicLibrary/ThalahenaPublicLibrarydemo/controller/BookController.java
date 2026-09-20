@@ -63,7 +63,7 @@ public class BookController {
 
     @PostMapping(consumes = {"multipart/form-data"})
     @PreAuthorize("hasRole('STAFF') or hasRole('ADMIN')")
-    public ResponseEntity<BookDTO> createBook(
+    public ResponseEntity<?> createBook(
             @RequestParam("title") String title,
             @RequestParam("authorId") Long authorId,
             @RequestParam("isbn") String isbn,
@@ -78,7 +78,11 @@ public class BookController {
             @RequestParam(value = "municipalRef", required = false) String municipalRef,
             @RequestParam(value = "libraryRef", required = false) String libraryRef,
             @RequestParam(value = "file", required = false) MultipartFile file) throws IOException {
-        
+
+        if (isbn != null && !isbn.isEmpty() && bookRepository.existsByIsbn(isbn)) {
+            return ResponseEntity.badRequest().body("Error: A book with this ISBN already exists!");
+        }
+
         Book book = new Book();
         book.setTitle(title);
         book.setIsbn(isbn);
@@ -139,6 +143,11 @@ public class BookController {
         return bookRepository.findById(id)
                 .map(book -> {
                     try {
+                        boolean isbnChanged = isbn != null && !isbn.equals(book.getIsbn());
+                        if (isbnChanged && !isbn.isEmpty() && bookRepository.existsByIsbn(isbn)) {
+                            return ResponseEntity.badRequest().body("Error: A book with this ISBN already exists!");
+                        }
+
                         book.setTitle(title);
                         book.setIsbn(isbn);
                         book.setCategory(category);
